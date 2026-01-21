@@ -1,0 +1,112 @@
+/* ShoppingCart.module.css */
+
+.movies {
+  margin: 2rem auto;
+  max-width: 50rem;
+}
+
+/* container for the single proceed‐all button */
+.globalActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.proceedAll {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+.proceedAll:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.proceedAll:not(:disabled):hover {
+  background: var(--color-primary-dark);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  margin-bottom: 0.5rem;
+}
+
+/* THE ONE LINK that wraps img + content */
+.item > a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--color-gray-800);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s;
+}
+.item > a:hover {
+  background: var(--color-gray-700);
+}
+
+/* poster on the left */
+.item img {
+  flex-shrink: 0;
+  width: 60px;
+  height: auto;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* right-hand column */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* title */
+.content h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+/* section labels */
+.content h4 {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-yellow, yellow);
+}
+
+/* actor/director lists side by side */
+.actorslist,
+.directorslist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+.actorslist p,
+.directorslist p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* buttons stuck to the bottom of the card */
+.buttons {
+  margin-top: auto;
+  display: flex;
+  gap: 0.5rem;
+}
