@@ -25,12 +25,12 @@ export async function loader({ request, params }) {
   } else {
     const movie = await response.json();
 
-    const stockEntry = stockData.find((s) => s.movieId === movie.id);
-    const stock = stockEntry ? stockEntry.stock : 0;
+    /*const stockEntry = stockData.find((s) => s.movieId === movie.id);
+    const stock = stockEntry ? stockEntry.stock : 0;*/
 
     const movieWithStock = {
-      ...movie,
-      stock,
+      ...movie /*,
+      stock,*/,
     };
     return movieWithStock;
   }
