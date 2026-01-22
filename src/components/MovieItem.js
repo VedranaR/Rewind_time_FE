@@ -7,7 +7,8 @@ import placeholder from "../assets/poster-placeholder.png";
 function MovieItem({ movie }) {
   const { jwt, user, addToCart, removeFromCart, cart } = useAuth();
   const inCart = cart.some((m) => m.id === movie.id);
-
+  console.log({ movie });
+  console.log(jwt);
   async function addToCartHandler() {
     addToCart(movie);
 
@@ -49,7 +50,7 @@ function MovieItem({ movie }) {
         },
       );
       if (!res.ok) throw new Error(`Remove failed (${res.status})`);
-      console.log("✅ removed from basket on server");
+      console.log("removed from basket on server");
     } catch (err) {
       console.error(err);
 
@@ -111,7 +112,9 @@ function MovieItem({ movie }) {
         {user.isAdmin && <Link to="edit">Edit</Link>}
 
         {user.isAdmin && (
-          <button onClick={() => /* to do delete movie functionality */ null}>
+          <button
+            onClick={() => /* to do later - delete movie functionality */ null}
+          >
             Delete
           </button>
         )}
