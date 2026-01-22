@@ -39,13 +39,13 @@ function UserProfileEditForm({ method }) {
       setLoading(false);
     }
   }, [jwt]);
+
   function cancelHandler() {
     navigate("..");
   }
 
   return (
     <div className={classes.wrapper}>
-      {/* Collapsible: Personal details */}
       <details className={classes.section} open>
         <summary className={classes.summary}>Personal Account Details</summary>
 
@@ -90,9 +90,7 @@ function UserProfileEditForm({ method }) {
             </p>
 
             <div className={classes.actions}>
-              <button type="button" onClick={cancelHandler}>
-                Cancel
-              </button>
+              <button type="reset">Cancel</button>
               <button>Save</button>
             </div>
           </Form>
@@ -101,7 +99,6 @@ function UserProfileEditForm({ method }) {
 
       <hr className={classes.divider} />
 
-      {/* Collapsible: Membership form */}
       <details className={classes.section}>
         <summary className={classes.summary}>
           Membership Fee Payment Details
@@ -177,9 +174,7 @@ function UserProfileEditForm({ method }) {
             </p>
 
             <div className={classes.actions}>
-              <button type="button" onClick={cancelHandler}>
-                Cancel
-              </button>
+              <button type="reset">Cancel</button>
               <button>Save</button>
             </div>
           </Form>
@@ -188,7 +183,6 @@ function UserProfileEditForm({ method }) {
 
       <hr className={classes.divider} />
 
-      {/* Order history moved to the bottom */}
       <section className={classes.historySection}>
         <h2 className={classes.title}>Your Past Orders</h2>
 

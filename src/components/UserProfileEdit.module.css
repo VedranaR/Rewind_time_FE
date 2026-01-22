@@ -53,24 +53,11 @@ h2 {
 .actions button[type="button"]:hover {
   background-color: var(--color-gray-800);
 }
-/*
-.creditSummary {
-  max-width: 40rem;
-  margin: 1rem auto;
-  background: var(--color-gray-100);
-  padding: 1rem;
-  border-radius: 4px;
-}*/
-.creditSummary h3 {
-  margin: 0 0 1.5rem 0;
-}
 
-/*.historySection {
-  background: var(--color-gray-100);
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 2rem;
+/*.creditSummary h3 {
+  margin: 0 0 1.5rem 0;
 }*/
+
 .orderList {
   list-style: none;
   padding: 0;
@@ -84,13 +71,12 @@ h2 {
   color: red;
 }
 
-/* Credits box */
-.creditSummary {
+/*.creditSummary {
   background: var(--color-gray-50);
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 2rem;
-}
+}*/
 
 .wrapper {
   max-width: 80%;
@@ -101,7 +87,6 @@ h2 {
   color: var(--color-primary-800);
 }
 
-/* Separator that matches the form spacing */
 .divider {
   max-width: 40rem;
   margin: 1.25rem auto;
@@ -109,7 +94,6 @@ h2 {
   border-top: 1px solid var(--color-gray-300);
 }
 
-/* Collapsible sections */
 .section {
   max-width: 40rem;
   margin: 2rem auto;
@@ -125,7 +109,6 @@ h2 {
   color: var(--color-primary-800);
 }
 
-/* nicer look when expanded */
 .section[open] .summary {
   border-bottom: 1px solid var(--color-gray-300);
 }
@@ -134,7 +117,6 @@ h2 {
   padding: 1rem;
 }
 
-/* Order history box */
 .historySection {
   max-width: 40rem;
   margin: 2rem auto;
