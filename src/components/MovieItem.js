@@ -93,7 +93,7 @@ function MovieItem({ movie }) {
 
   const trailerEmbedUrl = movie?.youtubeTrailer?.embedUrl;
   const trailerUrl = trailerEmbedUrl
-    ? `${trailerEmbedUrl}?autoplay=1&mute=1&controls=1`
+    ? `${trailerEmbedUrl}?autoplay=0&mute=1&controls=1`
     : null;
 
   return (
@@ -163,7 +163,7 @@ function MovieItem({ movie }) {
               <iframe
                 src={trailerUrl}
                 title={movie.youtubeTrailer?.name || `${movie.title} trailer`}
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
