@@ -26,7 +26,9 @@ function MoviesList({ movies }) {
                 <div className={classes.content}>
                   <h2>{movie.title}</h2>
 
-                  <span>available in stock: {movie.stock}</span>
+                  {jwt && movie.stock !== undefined && movie.stock !== null && (
+                    <span>available in stock: {movie.stock}</span>
+                  )}
 
                   <h4>Actors</h4>
                   <div>
