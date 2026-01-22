@@ -42,137 +42,178 @@ function UserProfileEditForm({ method }) {
   function cancelHandler() {
     navigate("..");
   }
+
   return (
-    <div>
-      <h2>Your Past Orders</h2>
-      {loading && <p>Loading…</p>}
-      {error && <p className={classes.error}>{error}</p>}
-      {!loading && orders.length === 0 && <p>You have no past orders.</p>}
-      {!loading && orders.length > 0 && (
-        <ul className={classes.orderList}>
-          {orders.map((ord) => (
-            <li key={ord.trackingNumber}>
-              <strong>Tracking #:</strong> {ord.trackingNumber}
-              <br />
-              <strong>Date:</strong>{" "}
-              {new Date(ord.orderDate).toLocaleDateString()}
-              <br />
-              <strong>Items:</strong> {ord.itemIdList.join(", ")}
-              <br />
-              <strong>Status:</strong> {ord.isReturned ? "Returned" : "Active"}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className={classes.wrapper}>
+      {/* Collapsible: Personal details */}
+      <details className={classes.section} open>
+        <summary className={classes.summary}>Personal Account Details</summary>
 
-      <Form method="post" className={classes.form}>
-        <h2>Personal Account Details</h2>
-        <p>
-          <label htmlFor="name">First and Last Name</label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            required
-            placeholder="First and Last Name"
-          />
-        </p>
-        <p>
-          <label htmlFor="year">Year and month of birth</label>
-          <input id="year" type="month" name="year" required />
-        </p>
-        <p>
-          <label htmlFor="actors">Email address</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            required
-            placeholder="Email"
-          />
-        </p>
-        <p>
-          <label htmlFor="password">Your Chosen Password</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            required
-            placeholder="Password"
-          />
-        </p>
-        <div className={classes.actions}>
-          <button type="button" onClick={cancelHandler}>
-            Cancel
-          </button>
-          <button>Save</button>
-        </div>
-      </Form>
+        <div className={classes.sectionContent}>
+          <Form method="post" className={classes.form}>
+            <p>
+              <label htmlFor="name">First and Last Name</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                required
+                placeholder="First and Last Name"
+              />
+            </p>
 
-      <hr></hr>
-      <Form method="post" className={classes.form}>
-        <h2>Membership Fee Payment Details</h2>
-        <p>
-          <label htmlFor="cardNumber">Credit Card Number</label>
-          <input
-            id="cardNumber"
-            type="text"
-            name="cardNumber"
-            required
-            placeholder="Credit Card Number"
-          />
-        </p>
-        <p>
-          <label htmlFor="year">Card Valid Until</label>
-          <input id="year" type="month" name="cardExpirationDate" required />
-        </p>
-        <p>
-          <label htmlFor="cardHolderName">Credit Card Owner</label>
-          <input
-            id="cardHolderName"
-            type="text"
-            name="cardHolderName"
-            required
-            placeholder="Credit Card Owner"
-          />
-        </p>
-        <p>
-          <label htmlFor="streetWithNumber">Street Name and House Number</label>
-          <input
-            id="streetWithNumber"
-            type="text"
-            name="streetWithNumber"
-            required
-            placeholder="Street Name and House Number"
-          />
-        </p>
-        <p>
-          <label htmlFor="city">City</label>
-          <input
-            id="city"
-            type="text"
-            name="city"
-            required
-            placeholder="City"
-          />
-        </p>
-        <p>
-          <label htmlFor="postalCode">Postal Code</label>
-          <input
-            id="postalCode"
-            type="text"
-            name="postalCode"
-            required
-            placeholder="Postal Code"
-          />
-        </p>
-        <div className={classes.actions}>
-          <button type="button" onClick={cancelHandler}>
-            Cancel
-          </button>
-          <button>Save</button>
+            <p>
+              <label htmlFor="year">Year and month of birth</label>
+              <input id="year" type="month" name="year" required />
+            </p>
+
+            <p>
+              <label htmlFor="email">Email address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                placeholder="Email"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="password">Your Chosen Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                required
+                placeholder="Password"
+              />
+            </p>
+
+            <div className={classes.actions}>
+              <button type="button" onClick={cancelHandler}>
+                Cancel
+              </button>
+              <button>Save</button>
+            </div>
+          </Form>
         </div>
-      </Form>
+      </details>
+
+      <hr className={classes.divider} />
+
+      {/* Collapsible: Membership form */}
+      <details className={classes.section}>
+        <summary className={classes.summary}>
+          Membership Fee Payment Details
+        </summary>
+
+        <div className={classes.sectionContent}>
+          <Form method="post" className={classes.form}>
+            <p>
+              <label htmlFor="cardNumber">Credit Card Number</label>
+              <input
+                id="cardNumber"
+                type="text"
+                name="cardNumber"
+                required
+                placeholder="Credit Card Number"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="cardExpirationDate">Card Valid Until</label>
+              <input
+                id="cardExpirationDate"
+                type="month"
+                name="cardExpirationDate"
+                required
+              />
+            </p>
+
+            <p>
+              <label htmlFor="cardHolderName">Credit Card Owner</label>
+              <input
+                id="cardHolderName"
+                type="text"
+                name="cardHolderName"
+                required
+                placeholder="Credit Card Owner"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="streetWithNumber">
+                Street Name and House Number
+              </label>
+              <input
+                id="streetWithNumber"
+                type="text"
+                name="streetWithNumber"
+                required
+                placeholder="Street Name and House Number"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="city">City</label>
+              <input
+                id="city"
+                type="text"
+                name="city"
+                required
+                placeholder="City"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="postalCode">Postal Code</label>
+              <input
+                id="postalCode"
+                type="text"
+                name="postalCode"
+                required
+                placeholder="Postal Code"
+              />
+            </p>
+
+            <div className={classes.actions}>
+              <button type="button" onClick={cancelHandler}>
+                Cancel
+              </button>
+              <button>Save</button>
+            </div>
+          </Form>
+        </div>
+      </details>
+
+      <hr className={classes.divider} />
+
+      {/* Order history moved to the bottom */}
+      <section className={classes.historySection}>
+        <h2 className={classes.title}>Your Past Orders</h2>
+
+        {loading && <p>Loading…</p>}
+        {error && <p className={classes.error}>{error}</p>}
+        {!loading && orders.length === 0 && <p>You have no past orders.</p>}
+
+        {!loading && orders.length > 0 && (
+          <ul className={classes.orderList}>
+            {orders.map((ord) => (
+              <li key={ord.trackingNumber}>
+                <strong>Tracking #:</strong> {ord.trackingNumber}
+                <br />
+                <strong>Date:</strong>{" "}
+                {new Date(ord.orderDate).toLocaleDateString()}
+                <br />
+                <strong>Items:</strong> {ord.itemIdList.join(", ")}
+                <br />
+                <strong>Status:</strong>{" "}
+                {ord.isReturned ? "Returned" : "Active"}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
