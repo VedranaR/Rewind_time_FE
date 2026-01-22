@@ -7,8 +7,8 @@ import placeholder from "../assets/poster-placeholder.png";
 function MovieItem({ movie }) {
   const { jwt, user, addToCart, removeFromCart, cart } = useAuth();
   const inCart = cart.some((m) => m.id === movie.id);
-  console.log({ movie });
-  console.log(jwt);
+  /*console.log({ movie });
+  console.log(jwt);*/
   async function addToCartHandler() {
     addToCart(movie);
 
@@ -133,7 +133,9 @@ function MovieItem({ movie }) {
       <hr></hr>
       <div className={classes.content}>
         <h2>{movie.title}</h2>
-        {movie.stock && jwt && <span>available in stock: {movie.stock}</span>}
+        {jwt && movie.stock !== undefined && movie.stock !== null && (
+          <span>available in stock: {movie.stock}</span>
+        )}
         <h4>Year of filming</h4>
         <div>
           <p>{movie.releaseDate.slice(0, 4)}</p>

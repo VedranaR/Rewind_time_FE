@@ -1,6 +1,6 @@
 import { useLoaderData } from "react-router-dom";
 import MovieItem from "../components/MovieItem.js";
-import stockData from "../stock.json";
+//import stockData from "../stock.json";
 
 function MovieDetailPage() {
   const movie = useLoaderData();
@@ -25,12 +25,17 @@ export async function loader({ request, params }) {
   } else {
     const movie = await response.json();
 
-    /*const stockEntry = stockData.find((s) => s.movieId === movie.id);
-    const stock = stockEntry ? stockEntry.stock : 0;*/
+    const stockResponse = await fetch(
+      "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/stock",
+    );
+    const stockData = stockResponse.ok ? await stockResponse.json() : [];
+
+    const stockEntry = stockData.find((s) => s.movieId === movie.id);
+    const stock = stockEntry ? stockEntry.stock : 0;
 
     const movieWithStock = {
-      ...movie /*,
-      stock,*/,
+      ...movie,
+      stock,
     };
     return movieWithStock;
   }
