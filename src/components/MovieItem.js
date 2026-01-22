@@ -174,25 +174,27 @@ function MovieItem({ movie }) {
           )}
         </div>
       </div>
-      <form className={classes.form} onSubmit={handleReviewSubmit}>
-        <p>
-          <label htmlFor="review">Add a new review</label>
-          <textarea
-            id="review"
-            name="review"
-            rows="5"
-            required
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-          />
-        </p>
-        <div className={classes.actions}>
-          <button type="button" onClick={handleReviewCancel}>
-            Cancel
-          </button>
-          <button type="submit">Save</button>
-        </div>
-      </form>
+      {jwt && (
+        <form className={classes.form} onSubmit={handleReviewSubmit}>
+          <p>
+            <label htmlFor="review">Add a new review</label>
+            <textarea
+              id="review"
+              name="review"
+              rows="5"
+              required
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+            />
+          </p>
+          <div className={classes.actions}>
+            <button type="button" onClick={handleReviewCancel}>
+              Cancel
+            </button>
+            <button type="submit">Save</button>
+          </div>
+        </form>
+      )}
     </article>
   );
 }
