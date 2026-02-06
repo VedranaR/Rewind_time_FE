@@ -1,27 +1,27 @@
 import { useEffect, useState } from "react";
-import { Form, useNavigate } from "react-router-dom";
+import { Form } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import classes from "./UserProfileEdit.module.css";
 
 function UserProfileEdit() {
-  const navigate = useNavigate();
   const { jwt } = useAuth();
 
+  // Order history state
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState("");
 
+  // Return order UX state
   const [returning, setReturning] = useState(false);
   const [returnError, setReturnError] = useState("");
   const [returnSuccess, setReturnSuccess] = useState("");
 
-  function cancelHandler() {
-    navigate("..");
-  }
-
+  // Fetch order history (reusable so we can refresh after returning)
   async function fetchHistory() {
-    setLoading(true);
-    setError("");
+    if (!jwt) return;
+
+    setLoadingOrders(true);
+    setOrdersError("");
 
     try {
       const res = await fetch(
@@ -38,18 +38,21 @@ function UserProfileEdit() {
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || "Failed to load orders");
+      setOrdersError(err.message || "Failed to load orders");
     } finally {
-      setLoading(false);
+      setLoadingOrders(false);
     }
   }
 
   useEffect(() => {
-    if (jwt) fetchHistory();
+    fetchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt]);
 
+  // Return latest/active order (user can only have one active order)
   async function handleReturnLatestOrder() {
+    if (!jwt) return;
+
     setReturning(true);
     setReturnError("");
     setReturnSuccess("");
@@ -58,14 +61,14 @@ function UserProfileEdit() {
       let res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
         {
-          method: "POST",
+          method: "POST", // if backend expects PUT, we fallback below
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         },
       );
 
-      // If backend expects PUT instead of POST
+      // fallback if backend uses PUT
       if (res.status === 405) {
         res = await fetch(
           "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
@@ -91,52 +94,194 @@ function UserProfileEdit() {
 
   return (
     <div className={classes.wrapper}>
-      <h2 className={classes.title}>Your Past Orders</h2>
+      {/* Collapsible section: Personal details */}
+      <details className={classes.section} open>
+        <summary className={classes.summary}>Personal Account Details</summary>
 
-      {loading && <p>Loading…</p>}
-      {error && <p className={classes.error}>{error}</p>}
-      {returnSuccess && <p className={classes.success}>{returnSuccess}</p>}
+        <div className={classes.sectionContent}>
+          <Form method="post" className={classes.form}>
+            <p>
+              <label htmlFor="name">First and Last Name</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                required
+                placeholder="First and Last Name"
+              />
+            </p>
 
-      {!loading && orders.length === 0 && <p>You have no past orders.</p>}
+            <p>
+              <label htmlFor="year">Year and month of birth</label>
+              <input id="year" type="month" name="year" required />
+            </p>
 
-      {!loading && orders.length > 0 && (
-        <ul className={classes.orderList}>
-          {orders.map((ord) => (
-            <li key={ord.trackingNumber} className={classes.orderItem}>
-              <strong>Tracking #:</strong> {ord.trackingNumber}
-              <br />
-              <strong>Date:</strong>{" "}
-              {new Date(ord.orderDate).toLocaleDateString()}
-              <br />
-              <strong>Items:</strong> {ord.itemIdList.join(", ")}
-              <br />
-              <strong>Status:</strong> {ord.isReturned ? "Returned" : "Active"}
-              {!ord.isReturned && (
-                <div className={classes.orderActions}>
-                  <button
-                    type="button"
-                    onClick={handleReturnLatestOrder}
-                    disabled={returning}
-                    className={classes.returnBtn}
-                  >
-                    {returning ? "Returning…" : "Return order"}
-                  </button>
+            <p>
+              <label htmlFor="email">Email address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                placeholder="Email"
+              />
+            </p>
 
-                  {returnError && (
-                    <p className={classes.error}>{returnError}</p>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+            <p>
+              <label htmlFor="password">Your Chosen Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                required
+                placeholder="Password"
+              />
+            </p>
 
-      <div className={classes.actions}>
-        <button type="button" onClick={cancelHandler}>
-          Back
-        </button>
-      </div>
+            <div className={classes.actions}>
+              {/* type="reset" clears fields */}
+              <button type="reset">Cancel</button>
+              <button type="submit">Save</button>
+            </div>
+          </Form>
+        </div>
+      </details>
+
+      <hr className={classes.divider} />
+
+      {/* Collapsible section: Membership / payment */}
+      <details className={classes.section}>
+        <summary className={classes.summary}>
+          Membership Fee Payment Details
+        </summary>
+
+        <div className={classes.sectionContent}>
+          <Form method="post" className={classes.form}>
+            <p>
+              <label htmlFor="cardNumber">Credit Card Number</label>
+              <input
+                id="cardNumber"
+                type="text"
+                name="cardNumber"
+                required
+                placeholder="Credit Card Number"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="cardExpirationDate">Card Valid Until</label>
+              <input
+                id="cardExpirationDate"
+                type="month"
+                name="cardExpirationDate"
+                required
+              />
+            </p>
+
+            <p>
+              <label htmlFor="cardHolderName">Credit Card Owner</label>
+              <input
+                id="cardHolderName"
+                type="text"
+                name="cardHolderName"
+                required
+                placeholder="Credit Card Owner"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="streetWithNumber">
+                Street Name and House Number
+              </label>
+              <input
+                id="streetWithNumber"
+                type="text"
+                name="streetWithNumber"
+                required
+                placeholder="Street Name and House Number"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="city">City</label>
+              <input
+                id="city"
+                type="text"
+                name="city"
+                required
+                placeholder="City"
+              />
+            </p>
+
+            <p>
+              <label htmlFor="postalCode">Postal Code</label>
+              <input
+                id="postalCode"
+                type="text"
+                name="postalCode"
+                required
+                placeholder="Postal Code"
+              />
+            </p>
+
+            <div className={classes.actions}>
+              <button type="reset">Cancel</button>
+              <button type="submit">Save</button>
+            </div>
+          </Form>
+        </div>
+      </details>
+
+      <hr className={classes.divider} />
+
+      {/* Order history section */}
+      <section className={classes.historySection}>
+        <h2 className={classes.title}>Your Past Orders</h2>
+
+        {returnSuccess && <p className={classes.success}>{returnSuccess}</p>}
+        {returnError && <p className={classes.error}>{returnError}</p>}
+
+        {loadingOrders && <p>Loading…</p>}
+        {!loadingOrders && ordersError && (
+          <p className={classes.error}>{ordersError}</p>
+        )}
+
+        {!loadingOrders && !ordersError && orders.length === 0 && (
+          <p>You have no past orders.</p>
+        )}
+
+        {!loadingOrders && !ordersError && orders.length > 0 && (
+          <ul className={classes.orderList}>
+            {orders.map((ord) => (
+              <li key={ord.trackingNumber} className={classes.orderItem}>
+                <strong>Tracking #:</strong> {ord.trackingNumber}
+                <br />
+                <strong>Date:</strong>{" "}
+                {ord.orderDate ? new Date(ord.orderDate).toLocaleString() : ""}
+                <br />
+                <strong>Items:</strong>{" "}
+                {Array.isArray(ord.itemIdList) ? ord.itemIdList.join(", ") : ""}
+                <br />
+                <strong>Status:</strong>{" "}
+                {ord.isReturned ? "Returned" : "Active"}
+                {/* Only active order can be returned; user has max 1 active */}
+                {!ord.isReturned && (
+                  <div className={classes.orderActions}>
+                    <button
+                      type="button"
+                      onClick={handleReturnLatestOrder}
+                      disabled={returning}
+                      className={classes.returnBtn}
+                    >
+                      {returning ? "Returning…" : "Return order"}
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
