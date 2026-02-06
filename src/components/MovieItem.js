@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import classes from "./MovieItem.module.css";
 import { useAuth } from "../auth/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import placeholder from "../assets/poster-placeholder.png";
 
 function MovieItem({ movie }) {
@@ -55,12 +55,56 @@ function MovieItem({ movie }) {
     }
   }
 
-  // ---- Reviews (NEW) ----
+  // ---- Reviews + Permissions ----
   const [reviewText, setReviewText] = useState("");
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState("");
+
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState("");
+
+  // We cannot identify the user from AuthContext (only isAdmin/isBanned),
+  // so we detect "already reviewed" based on backend response/success.
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+
+  // Reset form state when switching movies
+  useEffect(() => {
+    setReviewText("");
+    setAlreadyReviewed(false);
+  }, [movie?.id]);
+
+  async function fetchOrderHistory() {
+    if (!jwt) return;
+
+    setOrdersLoading(true);
+    setOrdersError("");
+
+    try {
+      const res = await fetch(
+        "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Failed to load order history (${res.status})`);
+      }
+
+      const data = await res.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch order history failed:", err);
+      setOrdersError(err.message || "Failed to load order history");
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  }
 
   async function fetchReviews() {
     if (!jwt || !movie?.id) return;
@@ -98,18 +142,37 @@ function MovieItem({ movie }) {
   }
 
   useEffect(() => {
-    // whenever we open a different movie, refresh reviews
+    if (jwt) fetchOrderHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jwt]);
+
+  useEffect(() => {
     if (jwt) fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt, movie?.id]);
 
+  const hasOrderedThisMovie = useMemo(() => {
+    if (!Array.isArray(orders) || !movie?.id) return false;
+
+    // order shape: { itemIdList: [...] }
+    return orders.some(
+      (o) => Array.isArray(o.itemIdList) && o.itemIdList.includes(movie.id),
+    );
+  }, [orders, movie?.id]);
+
+  const canWriteReview = !!jwt && hasOrderedThisMovie && !alreadyReviewed;
+
   function handleReviewCancel() {
+    if (!reviewText.trim()) return;
     setReviewText("");
-    alert("Review canceled");
   }
 
   async function handleReviewSubmit(e) {
     e.preventDefault();
+
+    if (!canWriteReview) return;
+    if (!reviewText.trim()) return;
+
     try {
       const res = await fetch(
         `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/reviews/put/${movie.id}`,
@@ -125,14 +188,24 @@ function MovieItem({ movie }) {
 
       if (!res.ok) {
         const errBody = await res.text();
+
+        // If backend indicates "already reviewed", lock the form read-only.
+        if (
+          res.status === 409 ||
+          /already|exists|duplicate|reviewed/i.test(errBody)
+        ) {
+          setAlreadyReviewed(true);
+        }
+
         throw new Error(errBody || `Status ${res.status}`);
       }
 
       alert("Review submitted successfully");
+
+      setAlreadyReviewed(true); // user now has a review for this movie
       setReviewText("");
 
-      // NEW: refresh sidebar immediately
-      await fetchReviews();
+      await fetchReviews(); // refresh sidebar
     } catch (err) {
       console.error("Review submission failed:", err);
       alert("Failed to submit review: " + err.message);
@@ -143,6 +216,17 @@ function MovieItem({ movie }) {
   const trailerUrl = trailerEmbedUrl
     ? `${trailerEmbedUrl}?autoplay=0&mute=1&controls=1`
     : null;
+
+  // Helpful message for why form is locked
+  const reviewLockMessage = !jwt
+    ? "Log in to write a review."
+    : ordersLoading
+      ? "Checking order history..."
+      : !hasOrderedThisMovie
+        ? "You can only review movies you have ordered."
+        : alreadyReviewed
+          ? "You have already reviewed this movie."
+          : "";
 
   return (
     <article className={classes.event}>
@@ -181,7 +265,6 @@ function MovieItem({ movie }) {
 
       <hr />
 
-      {/* NEW: two-column layout (content + right sidebar) */}
       <div className={classes.layout}>
         {/* Main content (left) */}
         <div className={classes.content}>
@@ -236,7 +319,7 @@ function MovieItem({ movie }) {
 
         {/* Right sidebar */}
         <aside className={classes.sidebar}>
-          {/* Review form (existing, moved into sidebar) */}
+          {/* Review form */}
           {jwt && (
             <form className={classes.form} onSubmit={handleReviewSubmit}>
               <p>
@@ -245,22 +328,41 @@ function MovieItem({ movie }) {
                   id="review"
                   name="review"
                   rows="5"
-                  required
                   value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
+                  readOnly={!canWriteReview}
+                  placeholder={reviewLockMessage || "Write your review..."}
+                  onChange={(e) => {
+                    if (!canWriteReview) return;
+                    setReviewText(e.target.value);
+                  }}
                 />
               </p>
 
               <div className={classes.formActions}>
-                <button type="button" onClick={handleReviewCancel}>
+                <button
+                  type="button"
+                  onClick={handleReviewCancel}
+                  disabled={!canWriteReview || !reviewText.trim()}
+                >
                   Cancel
                 </button>
-                <button type="submit">Save</button>
+                <button
+                  type="submit"
+                  disabled={!canWriteReview || !reviewText.trim()}
+                >
+                  Save
+                </button>
               </div>
+
+              {/* Optional explanation */}
+              {!canWriteReview && reviewLockMessage && (
+                <p className={classes.muted}>{reviewLockMessage}</p>
+              )}
+              {ordersError && <p className={classes.error}>{ordersError}</p>}
             </form>
           )}
 
-          {/* NEW: Reviews list */}
+          {/* Reviews list */}
           {jwt ? (
             <div className={classes.reviewHistory}>
               <h3 className={classes.reviewTitle}>Reviews</h3>
