@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 import classes from "./UserProfileEdit.module.css";
 
 function UserProfileEdit() {
-  const { jwt } = useAuth();
+  const { jwt, user } = useAuth();
 
   // Order history state
   const [orders, setOrders] = useState([]);
@@ -16,11 +16,15 @@ function UserProfileEdit() {
   const [returnError, setReturnError] = useState("");
   const [returnSuccess, setReturnSuccess] = useState("");
 
-  // NEW: cache movie details so we can show titles instead of ids
-  // movieId (tt...) -> movie object
+  // Membership details (read-only account section)
+  const [membership, setMembership] = useState(null);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+  const [membershipError, setMembershipError] = useState("");
+
+  // Movie cache for titles in order history
   const [movieCache, setMovieCache] = useState({});
 
-  // Fetch order history (reusable so we can refresh after returning)
+  // Fetch order history
   async function fetchHistory() {
     if (!jwt) return;
 
@@ -49,12 +53,40 @@ function UserProfileEdit() {
     }
   }
 
+  // NEW: Fetch membership details
+  async function fetchMembership() {
+    if (!jwt) return;
+
+    setMembershipLoading(true);
+    setMembershipError("");
+
+    try {
+      const res = await fetch(
+        "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/membership",
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
+      );
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      setMembership(data);
+    } catch (err) {
+      setMembership(null);
+      setMembershipError(err.message || "Failed to load membership details");
+    } finally {
+      setMembershipLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchHistory();
+    fetchMembership();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt]);
 
-  // NEW: fetch one movie by id and cache it
   async function getMovieById(movieId) {
     if (!movieId) return null;
     if (movieCache[movieId]) return movieCache[movieId];
@@ -75,7 +107,6 @@ function UserProfileEdit() {
     return movie;
   }
 
-  // NEW: whenever we load history, preload movie titles for ids in orders
   useEffect(() => {
     async function preloadMovieTitles() {
       if (!orders || orders.length === 0) return;
@@ -101,7 +132,6 @@ function UserProfileEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
 
-  // Return latest/active order (user can only have one active order)
   async function handleReturnLatestOrder() {
     if (!jwt) return;
 
@@ -110,28 +140,15 @@ function UserProfileEdit() {
     setReturnSuccess("");
 
     try {
-      let res = await fetch(
+      const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
         {
-          method: "POST", // if backend expects PUT, we fallback below
+          method: "POST",
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         },
       );
-
-      // fallback if backend uses PUT
-      if (res.status === 405) {
-        res = await fetch(
-          "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${jwt}`,
-            },
-          },
-        );
-      }
 
       if (!res.ok) throw new Error(await res.text());
 
@@ -146,64 +163,76 @@ function UserProfileEdit() {
 
   return (
     <div className={classes.wrapper}>
-      {/* Collapsible section: Personal details */}
+      {/* Account details (read-only) */}
       <details className={classes.section} open>
-        <summary className={classes.summary}>Personal Account Details</summary>
+        <summary className={classes.summary}>Account details</summary>
 
         <div className={classes.sectionContent}>
-          <Form method="post" className={classes.form}>
-            <p>
-              <label htmlFor="name">First and Last Name</label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                required
-                placeholder="First and Last Name"
-              />
-            </p>
+          <ul className={classes.orderList}>
+            <li>
+              <strong>Username:</strong> {user?.username || "-"}
+            </li>
+          </ul>
 
-            <p>
-              <label htmlFor="year">Year and month of birth</label>
-              <input id="year" type="month" name="year" required />
-            </p>
+          <hr className={classes.divider} />
 
-            <p>
-              <label htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                required
-                placeholder="Email"
-              />
-            </p>
+          <h3 style={{ marginTop: 0 }}>Membership fee payment details</h3>
 
-            <p>
-              <label htmlFor="password">Your Chosen Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                required
-                placeholder="Password"
-              />
-            </p>
+          {membershipLoading && <p>Loading membership details…</p>}
+          {!membershipLoading && membershipError && (
+            <p className={classes.error}>{membershipError}</p>
+          )}
 
-            <div className={classes.actions}>
-              <button type="reset">Cancel</button>
-              <button type="submit">Save</button>
-            </div>
-          </Form>
+          {!membershipLoading && !membershipError && membership && (
+            <ul className={classes.orderList}>
+              <li>
+                <strong>Valid until:</strong>{" "}
+                {membership.validUntil
+                  ? new Date(membership.validUntil).toLocaleString()
+                  : "-"}
+              </li>
+
+              <li style={{ marginTop: "0.75rem" }}>
+                <strong>Card info</strong>
+              </li>
+              <li>
+                <strong>Card number:</strong>{" "}
+                {membership.cardInfo?.cardNumber || "-"}
+              </li>
+              <li>
+                <strong>Expiration date:</strong>{" "}
+                {membership.cardInfo?.cardExpirationDate || "-"}
+              </li>
+              <li>
+                <strong>Card holder:</strong>{" "}
+                {membership.cardInfo?.cardHolderName || "-"}
+              </li>
+
+              <li style={{ marginTop: "0.75rem" }}>
+                <strong>Shipping info</strong>
+              </li>
+              <li>
+                <strong>Street:</strong>{" "}
+                {membership.shippingInfo?.streetWithNumber || "-"}
+              </li>
+              <li>
+                <strong>City:</strong> {membership.shippingInfo?.city || "-"}
+              </li>
+              <li>
+                <strong>Postal code:</strong>{" "}
+                {membership.shippingInfo?.postalCode || "-"}
+              </li>
+            </ul>
+          )}
         </div>
       </details>
 
       <hr className={classes.divider} />
 
-      {/* Collapsible section: Membership / payment */}
+      {/* Collapsible section: Membership / payment (EDIT FORM still kept as your original) */}
       <details className={classes.section}>
         <summary className={classes.summary}>
-          Membership Fee Payment Details
+          Membership Fee Payment Details (Edit)
         </summary>
 
         <div className={classes.sectionContent}>
@@ -319,7 +348,6 @@ function UserProfileEdit() {
                 <br />
                 <strong>Status:</strong>{" "}
                 {ord.isReturned ? "Returned" : "Active"}
-                {/* Only active order can be returned; user has max 1 active */}
                 {!ord.isReturned && (
                   <div className={classes.orderActions}>
                     <button
