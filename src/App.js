@@ -35,19 +35,31 @@ const router = createBrowserRouter([
         element: <MoviesRootLayout />,
         errorElement: <ErrorPage />,
         loader: async () => {
+          const params = new URLSearchParams();
+          params.set("ratingMin", "0");
+          params.set("ratingMax", "10");
+          params.set("yearFrom", "1800");
+          params.set("yearTo", "2200");
+          params.set("page", "0");
+          params.set("size", "20");
+          params.set("sort", "title,asc");
+
           const response = await fetch(
-            "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies",
+            `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies/pageable?${params.toString()}`,
           );
 
           if (!response.ok) {
             console.error("Movies fetch failed:", response);
             throw new Error("Could not load movies");
           }
-          const movies = await response.json();
 
+          const data = await response.json(); // { content: [...], page: {...} }
+
+          // keep your old stock merge
           const stockRes = await fetch(
             "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/stock",
           );
+
           let stockData = [];
           if (stockRes.ok) {
             stockData = await stockRes.json();
@@ -60,10 +72,17 @@ const router = createBrowserRouter([
             return map;
           }, {});
 
-          return movies.map((m) => ({
+          const moviesWithStock = (data.content || []).map((m) => ({
             ...m,
             stock: stockMap[m.id] ?? 0,
           }));
+
+          // IMPORTANT: return object now (not array)
+          return {
+            movies: moviesWithStock,
+            page: data.page,
+            q: "",
+          };
         },
         children: [
           {
