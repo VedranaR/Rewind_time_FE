@@ -1,4 +1,4 @@
-import { useActionData, useNavigate } from "react-router-dom";
+import { useActionData, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "../auth/AuthContext";
 import LogInForm from "../components/LogInForm";
@@ -9,6 +9,9 @@ function LogInPage() {
   const actionData = useActionData();
   const { login, fetchCart } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const registrationSuccess = location.state?.registrationSuccess;
+
   useEffect(() => {
     if (actionData?.jwt) {
       const payload = jwtDecode(actionData.jwt);
@@ -25,7 +28,16 @@ function LogInPage() {
     }
   }, [actionData, fetchCart, login, navigate]);
 
-  return <LogInForm />;
+  return (
+    <>
+      {registrationSuccess && (
+        <p style={{ color: "green", marginBottom: "1rem" }}>
+          Registration successful! Please log in.
+        </p>
+      )}
+      <LogInForm />
+    </>
+  );
 }
 
 export default LogInPage;
