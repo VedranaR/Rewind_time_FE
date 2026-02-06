@@ -27,7 +27,7 @@ function MoviesList({ movies, pageInfo, goToPage }) {
         </button>
 
         <span className={classes.pageInfo}>
-          Page {currentPage + 1} of {Math.max(1, totalPages)}({totalElements}{" "}
+          Page {currentPage + 1} of {Math.max(1, totalPages)} ({totalElements}{" "}
           results)
         </span>
 

@@ -81,6 +81,7 @@
   border-radius: 6px;
   border: 1px solid var(--color-gray-300);
   background: var(--color-gray-50);
+  color: var(--color-primary-400);
   cursor: pointer;
   transition: 0.2s ease;
 }
