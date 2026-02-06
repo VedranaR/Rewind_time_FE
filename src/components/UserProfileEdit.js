@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Form } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import classes from "./UserProfileEdit.module.css";
 
@@ -16,15 +15,26 @@ function UserProfileEdit() {
   const [returnError, setReturnError] = useState("");
   const [returnSuccess, setReturnSuccess] = useState("");
 
-  // Membership details (read-only account section)
+  // Membership (read-only + editing)
   const [membership, setMembership] = useState(null);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipError, setMembershipError] = useState("");
 
+  const [savingMembership, setSavingMembership] = useState(false);
+  const [membershipSaveError, setMembershipSaveError] = useState("");
+  const [membershipSaveSuccess, setMembershipSaveSuccess] = useState("");
+
+  // Membership form fields (flat payload for PUT /membership)
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpirationDate, setCardExpirationDate] = useState("");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [streetWithNumber, setStreetWithNumber] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+
   // Movie cache for titles in order history
   const [movieCache, setMovieCache] = useState({});
 
-  // Fetch order history
   async function fetchHistory() {
     if (!jwt) return;
 
@@ -35,9 +45,7 @@ function UserProfileEdit() {
       const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
         {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
+          headers: { Authorization: `Bearer ${jwt}` },
         },
       );
 
@@ -53,7 +61,6 @@ function UserProfileEdit() {
     }
   }
 
-  // NEW: Fetch membership details
   async function fetchMembership() {
     if (!jwt) return;
 
@@ -73,6 +80,14 @@ function UserProfileEdit() {
 
       const data = await res.json();
       setMembership(data);
+
+      // Prefill edit form fields from GET response shape
+      setCardNumber(data?.cardInfo?.cardNumber || "");
+      setCardExpirationDate(data?.cardInfo?.cardExpirationDate || "");
+      setCardHolderName(data?.cardInfo?.cardHolderName || "");
+      setStreetWithNumber(data?.shippingInfo?.streetWithNumber || "");
+      setCity(data?.shippingInfo?.city || "");
+      setPostalCode(data?.shippingInfo?.postalCode || "");
     } catch (err) {
       setMembership(null);
       setMembershipError(err.message || "Failed to load membership details");
@@ -144,9 +159,7 @@ function UserProfileEdit() {
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
+          headers: { Authorization: `Bearer ${jwt}` },
         },
       );
 
@@ -159,6 +172,62 @@ function UserProfileEdit() {
     } finally {
       setReturning(false);
     }
+  }
+
+  async function handleMembershipSave(e) {
+    e.preventDefault();
+    if (!jwt) return;
+
+    setSavingMembership(true);
+    setMembershipSaveError("");
+    setMembershipSaveSuccess("");
+
+    try {
+      const payload = {
+        cardNumber,
+        cardExpirationDate,
+        cardHolderName,
+        streetWithNumber,
+        city,
+        postalCode,
+      };
+
+      const res = await fetch(
+        "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/membership",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!res.ok) throw new Error(await res.text());
+
+      setMembershipSaveSuccess("Membership details saved.");
+      await fetchMembership(); // refresh read-only panel + keep form in sync
+    } catch (err) {
+      setMembershipSaveError(
+        err.message || "Failed to save membership details",
+      );
+    } finally {
+      setSavingMembership(false);
+    }
+  }
+
+  function handleMembershipCancel() {
+    // revert form back to last fetched membership state
+    setMembershipSaveError("");
+    setMembershipSaveSuccess("");
+
+    setCardNumber(membership?.cardInfo?.cardNumber || "");
+    setCardExpirationDate(membership?.cardInfo?.cardExpirationDate || "");
+    setCardHolderName(membership?.cardInfo?.cardHolderName || "");
+    setStreetWithNumber(membership?.shippingInfo?.streetWithNumber || "");
+    setCity(membership?.shippingInfo?.city || "");
+    setPostalCode(membership?.shippingInfo?.postalCode || "");
   }
 
   return (
@@ -229,14 +298,21 @@ function UserProfileEdit() {
 
       <hr className={classes.divider} />
 
-      {/* Collapsible section: Membership / payment (EDIT FORM still kept as your original) */}
+      {/* Membership edit form (PUT /membership) */}
       <details className={classes.section}>
         <summary className={classes.summary}>
           Membership Fee Payment Details (Edit)
         </summary>
 
         <div className={classes.sectionContent}>
-          <Form method="post" className={classes.form}>
+          {membershipSaveSuccess && (
+            <p className={classes.success}>{membershipSaveSuccess}</p>
+          )}
+          {membershipSaveError && (
+            <p className={classes.error}>{membershipSaveError}</p>
+          )}
+
+          <form className={classes.form} onSubmit={handleMembershipSave}>
             <p>
               <label htmlFor="cardNumber">Credit Card Number</label>
               <input
@@ -245,6 +321,8 @@ function UserProfileEdit() {
                 name="cardNumber"
                 required
                 placeholder="Credit Card Number"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
               />
             </p>
 
@@ -255,6 +333,8 @@ function UserProfileEdit() {
                 type="month"
                 name="cardExpirationDate"
                 required
+                value={cardExpirationDate}
+                onChange={(e) => setCardExpirationDate(e.target.value)}
               />
             </p>
 
@@ -266,6 +346,8 @@ function UserProfileEdit() {
                 name="cardHolderName"
                 required
                 placeholder="Credit Card Owner"
+                value={cardHolderName}
+                onChange={(e) => setCardHolderName(e.target.value)}
               />
             </p>
 
@@ -279,6 +361,8 @@ function UserProfileEdit() {
                 name="streetWithNumber"
                 required
                 placeholder="Street Name and House Number"
+                value={streetWithNumber}
+                onChange={(e) => setStreetWithNumber(e.target.value)}
               />
             </p>
 
@@ -290,6 +374,8 @@ function UserProfileEdit() {
                 name="city"
                 required
                 placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
               />
             </p>
 
@@ -301,14 +387,24 @@ function UserProfileEdit() {
                 name="postalCode"
                 required
                 placeholder="Postal Code"
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
               />
             </p>
 
             <div className={classes.actions}>
-              <button type="reset">Cancel</button>
-              <button type="submit">Save</button>
+              <button
+                type="button"
+                onClick={handleMembershipCancel}
+                disabled={savingMembership}
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={savingMembership}>
+                {savingMembership ? "Saving…" : "Save"}
+              </button>
             </div>
-          </Form>
+          </form>
         </div>
       </details>
 
