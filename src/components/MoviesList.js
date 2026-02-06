@@ -17,19 +17,29 @@ function MoviesList({ movies, pageInfo, goToPage }) {
     <div className={classes.movies}>
       <h1>All Movies</h1>
 
-      {/* pagination header */}
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-        <button onClick={() => goToPage(currentPage - 1)} disabled={!canPrev}>
-          Prev
+      <div className={classes.pagination}>
+        <button onClick={() => goToPage(0)} disabled={currentPage === 0}>
+          ⏮ First
         </button>
 
-        <span>
-          Page {currentPage + 1} / {Math.max(1, totalPages)} — {totalElements}{" "}
-          results
+        <button onClick={() => goToPage(currentPage - 1)} disabled={!canPrev}>
+          ◀ Prev
+        </button>
+
+        <span className={classes.pageInfo}>
+          Page {currentPage + 1} of {Math.max(1, totalPages)}({totalElements}{" "}
+          results)
         </span>
 
         <button onClick={() => goToPage(currentPage + 1)} disabled={!canNext}>
-          Next
+          Next ▶
+        </button>
+
+        <button
+          onClick={() => goToPage(totalPages - 1)}
+          disabled={currentPage === totalPages - 1}
+        >
+          Last ⏭
         </button>
       </div>
 

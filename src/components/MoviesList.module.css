@@ -16,7 +16,9 @@
   background: var(--color-gray-800);
   border-radius: 4px;
   overflow: hidden;
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 }
 
 .item a:hover {
@@ -63,4 +65,36 @@
 
 .content p {
   margin: 0.25rem 0;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0 2rem 0;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-gray-300);
+  background: var(--color-gray-50);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: var(--color-primary-100);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-weight: 600;
+  color: var(--color-primary-800);
 }
