@@ -1,13 +1,16 @@
 import classes from "./MoviesNavigation.module.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, useMatch } from "react-router-dom";
 import SearchForm from "./SearchForm";
 import { useAuth } from "../auth/AuthContext";
 
 function MoviesNavigation({ onSearch }) {
   const { jwt, user } = useAuth();
+  const isMovieDetail = useMatch("/movies/:movieId");
+
   return (
     <>
-      <SearchForm onSearch={onSearch} />
+      {!isMovieDetail && <SearchForm onSearch={onSearch} />}
+
       <header className={classes.header}>
         <nav>
           <ul className={classes.list}>
