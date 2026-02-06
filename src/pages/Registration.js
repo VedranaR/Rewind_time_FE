@@ -36,8 +36,6 @@ export async function action({ request, params }) {
   console.log(status);
 
   if (status === 200) {
-    return redirect("/login", {
-      state: { registrationSuccess: true },
-    });
+    return redirect("/login?registered=1");
   }
 }

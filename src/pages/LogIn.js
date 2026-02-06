@@ -10,7 +10,8 @@ function LogInPage() {
   const { login, fetchCart } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const registrationSuccess = location.state?.registrationSuccess;
+  const registrationSuccess =
+    new URLSearchParams(location.search).get("registered") === "1";
 
   useEffect(() => {
     if (actionData?.jwt) {
