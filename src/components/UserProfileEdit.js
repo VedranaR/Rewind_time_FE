@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import classes from "./UserProfileEdit.module.css";
 
@@ -25,9 +25,7 @@ function UserProfileEdit() {
     try {
       const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
-        {
-          headers: { Authorization: `Bearer ${jwt}` },
-        },
+        { headers: { Authorization: `Bearer ${jwt}` } },
       );
 
       if (!res.ok) {
@@ -46,6 +44,7 @@ function UserProfileEdit() {
   }
 
   async function getMovieById(movieId) {
+    // already cached
     if (movieCache[movieId]) return movieCache[movieId];
 
     const res = await fetch(
@@ -55,7 +54,7 @@ function UserProfileEdit() {
     );
 
     if (!res.ok) {
-      console.warn("Failed to load movie:", movieId);
+      console.warn("Failed to load movie:", movieId, res.status);
       return null;
     }
 
@@ -74,29 +73,28 @@ function UserProfileEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt]);
 
-  // Preload movie titles when orders change
+  // preload movie titles whenever orders change
   useEffect(() => {
-    async function preloadMovieTitles() {
-      const allIds = new Set();
+    async function preloadTitles() {
+      const ids = new Set();
 
       orders.forEach((ord) => {
         if (Array.isArray(ord.itemIdList)) {
-          ord.itemIdList.forEach((id) => allIds.add(id));
+          ord.itemIdList.forEach((id) => ids.add(id));
         }
       });
 
-      const idsToFetch = Array.from(allIds).filter((id) => !movieCache[id]);
-
-      if (idsToFetch.length === 0) return;
+      const missing = Array.from(ids).filter((id) => !movieCache[id]);
+      if (missing.length === 0) return;
 
       try {
-        await Promise.all(idsToFetch.map((id) => getMovieById(id)));
+        await Promise.all(missing.map((id) => getMovieById(id)));
       } catch (e) {
         console.warn("Failed to preload some movie titles:", e);
       }
     }
 
-    preloadMovieTitles();
+    preloadTitles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
 
@@ -110,9 +108,7 @@ function UserProfileEdit() {
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
         {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
+          headers: { Authorization: `Bearer ${jwt}` },
         },
       );
 
@@ -130,12 +126,14 @@ function UserProfileEdit() {
     }
   }
 
-  const newestOrder =
-    orders.length > 0
-      ? [...orders].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        )[0]
-      : null;
+  // newest order = greatest orderDate
+  const newestOrder = useMemo(() => {
+    if (!orders.length) return null;
+
+    return [...orders].sort(
+      (a, b) => new Date(b.orderDate) - new Date(a.orderDate),
+    )[0];
+  }, [orders]);
 
   return (
     <div className={classes.wrapper}>
@@ -156,28 +154,49 @@ function UserProfileEdit() {
           const isNewest =
             newestOrder && newestOrder.trackingNumber === ord.trackingNumber;
 
+          const statusLabel = ord.isReturned ? "Returned" : "Active";
+
+          const itemsLabel =
+            Array.isArray(ord.itemIdList) && ord.itemIdList.length > 0
+              ? ord.itemIdList
+                  .map((id) => movieCache[id]?.title || id)
+                  .join(", ")
+              : "";
+
           return (
             <li key={ord.trackingNumber} className={classes.orderItem}>
               <p>
                 <strong>Tracking #:</strong> {ord.trackingNumber}
               </p>
+
               <p>
                 <strong>Date:</strong>{" "}
-                {ord.createdAt ? new Date(ord.createdAt).toLocaleString() : ""}
-              </p>
-              <p>
-                <strong>Items:</strong>{" "}
-                {Array.isArray(ord.itemIdList) && ord.itemIdList.length > 0
-                  ? ord.itemIdList
-                      .map((id) => movieCache[id]?.title || id)
-                      .join(", ")
-                  : ""}
-              </p>
-              <p>
-                <strong>Status:</strong> {ord.status}
+                {ord.orderDate ? new Date(ord.orderDate).toLocaleString() : ""}
               </p>
 
-              {isNewest && ord.status !== "Returned" && (
+              <p>
+                <strong>Items:</strong> {itemsLabel}
+              </p>
+
+              <p>
+                <strong>Status:</strong> {statusLabel}
+              </p>
+
+              {ord.isReturned && ord.returnTrackingNumber && (
+                <p>
+                  <strong>Return tracking #:</strong> {ord.returnTrackingNumber}
+                </p>
+              )}
+
+              {ord.isReturned && ord.returnDate && (
+                <p>
+                  <strong>Return date:</strong>{" "}
+                  {new Date(ord.returnDate).toLocaleString()}
+                </p>
+              )}
+
+              {/* Only newest non-returned order can be returned */}
+              {isNewest && !ord.isReturned && (
                 <div className={classes.orderActions}>
                   <button
                     onClick={handleReturnLatest}
