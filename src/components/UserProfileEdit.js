@@ -5,17 +5,17 @@ import classes from "./UserProfileEdit.module.css";
 function UserProfileEdit() {
   const { jwt, user } = useAuth();
 
-  // Order history state
+  // order history
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState("");
 
-  // Return order UX state
+  // return order
   const [returning, setReturning] = useState(false);
   const [returnError, setReturnError] = useState("");
   const [returnSuccess, setReturnSuccess] = useState("");
 
-  // Membership (read-only + editing)
+  // membership
   const [membership, setMembership] = useState(null);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipError, setMembershipError] = useState("");
@@ -24,7 +24,7 @@ function UserProfileEdit() {
   const [membershipSaveError, setMembershipSaveError] = useState("");
   const [membershipSaveSuccess, setMembershipSaveSuccess] = useState("");
 
-  // Membership form fields (flat payload for PUT /membership)
+  // membership form fields (flat payload for PUT /membership)
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpirationDate, setCardExpirationDate] = useState("");
   const [cardHolderName, setCardHolderName] = useState("");
@@ -32,7 +32,7 @@ function UserProfileEdit() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
 
-  // Movie cache for titles in order history
+  // movie cache for titles in order history
   const [movieCache, setMovieCache] = useState({});
 
   async function fetchHistory() {
@@ -81,7 +81,7 @@ function UserProfileEdit() {
       const data = await res.json();
       setMembership(data);
 
-      // Prefill edit form fields from GET response shape
+      // prefill edit form fields from GET response shape
       setCardNumber(data?.cardInfo?.cardNumber || "");
       setCardExpirationDate(data?.cardInfo?.cardExpirationDate || "");
       setCardHolderName(data?.cardInfo?.cardHolderName || "");
@@ -206,8 +206,10 @@ function UserProfileEdit() {
 
       if (!res.ok) throw new Error(await res.text());
 
+      const updatedMembership = await res.json();
+      setMembership(updatedMembership);
+
       setMembershipSaveSuccess("Membership details saved.");
-      await fetchMembership(); // refresh read-only panel + keep form in sync
     } catch (err) {
       setMembershipSaveError(
         err.message || "Failed to save membership details",
@@ -218,7 +220,7 @@ function UserProfileEdit() {
   }
 
   function handleMembershipCancel() {
-    // revert form back to last fetched membership state
+    // revert back to last fetched membership state
     setMembershipSaveError("");
     setMembershipSaveSuccess("");
 
@@ -232,7 +234,7 @@ function UserProfileEdit() {
 
   return (
     <div className={classes.wrapper}>
-      {/* Account details (read-only) */}
+      {/* Account details read-only */}
       <details className={classes.section} open>
         <summary className={classes.summary}>Account details</summary>
 
@@ -298,7 +300,7 @@ function UserProfileEdit() {
 
       <hr className={classes.divider} />
 
-      {/* Membership edit form (PUT /membership) */}
+      {/* Membership edit form */}
       <details className={classes.section}>
         <summary className={classes.summary}>
           Membership Fee Payment Details (Edit)
