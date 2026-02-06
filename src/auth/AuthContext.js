@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [jwt, setJwt] = useLocalStorage("jwt", null);
   const [user, setUser] = useLocalStorage("user", {
+    username: "",
     isAdmin: false,
     isBanned: false,
   });
@@ -19,7 +20,7 @@ export function AuthProvider({ children }) {
   );
   const logout = useCallback(() => {
     setJwt(null);
-    setUser({ isAdmin: false, isBanned: false });
+    setUser({ username: "", isAdmin: false, isBanned: false });
   }, [setJwt, setUser]);
 
   const [cart, setCart] = useLocalStorage("cart", []);

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "../auth/AuthContext";
 import LogInForm from "../components/LogInForm";
 import { redirect } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 function LogInPage() {
   const actionData = useActionData();
@@ -10,7 +11,11 @@ function LogInPage() {
   const navigate = useNavigate();
   useEffect(() => {
     if (actionData?.jwt) {
+      const payload = jwtDecode(actionData.jwt);
+      const username = payload.sub;
+
       login(actionData.jwt, {
+        username,
         isAdmin: actionData.authorities.includes("ROLE_ADMIN"),
         isBanned: false,
       });

@@ -23,11 +23,13 @@ function MovieItem({ movie }) {
           },
         },
       );
+
       if (!res.ok) {
         const text = await res.text();
         console.error("Add-to-basket failed:", res.status, text);
         throw new Error(`Add to basket failed (${res.status})`);
       }
+
       console.log("added to basket on server");
     } catch (err) {
       console.error(err);
@@ -37,6 +39,7 @@ function MovieItem({ movie }) {
 
   async function removeFromCartHandler() {
     removeFromCart(movie.id);
+
     try {
       const res = await fetch(
         `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket/remove/${movie.id}`,
@@ -47,6 +50,7 @@ function MovieItem({ movie }) {
           },
         },
       );
+
       if (!res.ok) throw new Error(`Remove failed (${res.status})`);
       console.log("removed from basket on server");
     } catch (err) {
@@ -66,14 +70,9 @@ function MovieItem({ movie }) {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
 
-  // We cannot identify the user from AuthContext (only isAdmin/isBanned),
-  // so we detect "already reviewed" based on backend response/success.
-  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-
   // Reset form state when switching movies
   useEffect(() => {
     setReviewText("");
-    setAlreadyReviewed(false);
   }, [movie?.id]);
 
   async function fetchOrderHistory() {
@@ -85,9 +84,7 @@ function MovieItem({ movie }) {
     try {
       const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
-        {
-          headers: { Authorization: `Bearer ${jwt}` },
-        },
+        { headers: { Authorization: `Bearer ${jwt}` } },
       );
 
       if (!res.ok) {
@@ -115,11 +112,7 @@ function MovieItem({ movie }) {
     try {
       const res = await fetch(
         `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/reviews/byMovie/${movie.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${jwt}` } },
       );
 
       if (!res.ok) {
@@ -154,13 +147,25 @@ function MovieItem({ movie }) {
   const hasOrderedThisMovie = useMemo(() => {
     if (!Array.isArray(orders) || !movie?.id) return false;
 
-    // order shape: { itemIdList: [...] }
     return orders.some(
       (o) => Array.isArray(o.itemIdList) && o.itemIdList.includes(movie.id),
     );
   }, [orders, movie?.id]);
 
-  const canWriteReview = !!jwt && hasOrderedThisMovie && !alreadyReviewed;
+  // NEW: detect “already reviewed” using username from JWT sub
+  const myUsername = String(user?.username || "").toLowerCase();
+
+  const hasAlreadyReviewedThisMovie = useMemo(() => {
+    if (!myUsername) return false;
+    if (!Array.isArray(reviews)) return false;
+
+    return reviews.some(
+      (r) => String(r.author || "").toLowerCase() === myUsername,
+    );
+  }, [reviews, myUsername]);
+
+  const canWriteReview =
+    !!jwt && hasOrderedThisMovie && !hasAlreadyReviewedThisMovie;
 
   function handleReviewCancel() {
     if (!reviewText.trim()) return;
@@ -188,24 +193,13 @@ function MovieItem({ movie }) {
 
       if (!res.ok) {
         const errBody = await res.text();
-
-        // If backend indicates "already reviewed", lock the form read-only.
-        if (
-          res.status === 409 ||
-          /already|exists|duplicate|reviewed/i.test(errBody)
-        ) {
-          setAlreadyReviewed(true);
-        }
-
         throw new Error(errBody || `Status ${res.status}`);
       }
 
       alert("Review submitted successfully");
-
-      setAlreadyReviewed(true); // user now has a review for this movie
       setReviewText("");
 
-      await fetchReviews(); // refresh sidebar
+      await fetchReviews(); // refresh sidebar (now it will lock the form automatically)
     } catch (err) {
       console.error("Review submission failed:", err);
       alert("Failed to submit review: " + err.message);
@@ -217,14 +211,13 @@ function MovieItem({ movie }) {
     ? `${trailerEmbedUrl}?autoplay=0&mute=1&controls=1`
     : null;
 
-  // Helpful message for why form is locked
   const reviewLockMessage = !jwt
     ? "Log in to write a review."
     : ordersLoading
       ? "Checking order history..."
       : !hasOrderedThisMovie
         ? "You can only review movies you have ordered."
-        : alreadyReviewed
+        : hasAlreadyReviewedThisMovie
           ? "You have already reviewed this movie."
           : "";
 
@@ -243,13 +236,7 @@ function MovieItem({ movie }) {
       <menu className={classes.actions}>
         {user.isAdmin && <Link to="edit">Edit</Link>}
 
-        {user.isAdmin && (
-          <button
-            onClick={() => /* to do later - delete movie functionality */ null}
-          >
-            Delete
-          </button>
-        )}
+        {user.isAdmin && <button onClick={() => null}>Delete</button>}
 
         {jwt && !inCart && (
           <button className={classes.rentBtn} onClick={addToCartHandler}>
@@ -266,7 +253,6 @@ function MovieItem({ movie }) {
       <hr />
 
       <div className={classes.layout}>
-        {/* Main content (left) */}
         <div className={classes.content}>
           <h2>{movie.title}</h2>
 
@@ -317,9 +303,7 @@ function MovieItem({ movie }) {
           </div>
         </div>
 
-        {/* Right sidebar */}
         <aside className={classes.sidebar}>
-          {/* Review form */}
           {jwt && (
             <form className={classes.form} onSubmit={handleReviewSubmit}>
               <p>
@@ -354,7 +338,6 @@ function MovieItem({ movie }) {
                 </button>
               </div>
 
-              {/* Optional explanation */}
               {!canWriteReview && reviewLockMessage && (
                 <p className={classes.muted}>{reviewLockMessage}</p>
               )}
@@ -362,7 +345,6 @@ function MovieItem({ movie }) {
             </form>
           )}
 
-          {/* Reviews list */}
           {jwt ? (
             <div className={classes.reviewHistory}>
               <h3 className={classes.reviewTitle}>Reviews</h3>
