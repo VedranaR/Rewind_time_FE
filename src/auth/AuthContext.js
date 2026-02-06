@@ -97,27 +97,53 @@ export function AuthProvider({ children }) {
       const token = tokenOverride || jwt;
       if (!token) throw new Error("Not authenticated");
 
-      const res = await fetch(
+      // 1) fetch basket
+      const basketRes = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket",
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `Fetch cart failed (${res.status})`);
+      if (!basketRes.ok) {
+        const text = await basketRes.text();
+        throw new Error(text || `Fetch basket failed (${basketRes.status})`);
       }
 
-      const data = await res.json();
+      const basket = await basketRes.json();
 
-      // Keep the current assumption (API returns an array of movies)
-      setCart(Array.isArray(data) ? data : []);
+      const ids = Array.isArray(basket?.items)
+        ? basket.items.map((it) => it.movieId).filter(Boolean)
+        : [];
 
-      return data;
+      if (ids.length === 0) {
+        setCart([]);
+        return [];
+      }
+
+      // 2) fetch movie details in parallel
+      const moviePromises = ids.map(async (id) => {
+        const res = await fetch(
+          `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies/one?id=${encodeURIComponent(
+            id,
+          )}`,
+        );
+
+        if (!res.ok) {
+          // skip missing movies instead of breaking everything
+          console.warn("Failed to fetch movie for basket id:", id, res.status);
+          return null;
+        }
+
+        return res.json();
+      });
+
+      const movies = (await Promise.all(moviePromises)).filter(Boolean);
+
+      // 3) update cart
+      setCart(movies);
+      return movies;
     },
     [jwt, setCart],
   );
