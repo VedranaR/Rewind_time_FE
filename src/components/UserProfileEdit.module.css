@@ -29,6 +29,7 @@ h2 {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  margin-top: 2rem;
 }
 
 .actions button {
@@ -85,6 +86,7 @@ h2 {
 
 .title {
   color: var(--color-primary-800);
+  margin-bottom: 1rem;
 }
 
 .divider {
@@ -124,4 +126,49 @@ h2 {
   border: 1px solid var(--color-gray-300);
   border-radius: 6px;
   background: var(--color-gray-50);
+}
+
+.orderList {
+  list-style: none;
+  padding: 0;
+}
+
+.orderItem {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--color-gray-50);
+}
+
+.orderActions {
+  margin-top: 0.75rem;
+}
+
+.returnBtn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-primary-500);
+  background: var(--color-primary-50);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.returnBtn:hover:not(:disabled) {
+  background: var(--color-primary-100);
+}
+
+.returnBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: red;
+  margin-top: 0.5rem;
+}
+
+.success {
+  color: green;
+  margin-bottom: 1rem;
 }
