@@ -2,13 +2,18 @@ import { Form, useNavigate } from "react-router-dom";
 
 import classes from "./LogInForm.module.css";
 
-function LogInForm({ method }) {
+function LogInForm({ method, registrationSuccess }) {
   const navigate = useNavigate();
   function cancelHandler() {
     navigate("..");
   }
   return (
     <Form method="post" className={classes.form}>
+      {registrationSuccess && (
+        <p className={classes.success}>
+          Registration successful! Please log in.
+        </p>
+      )}
       <p>
         <label htmlFor="username">Username</label>
         <input

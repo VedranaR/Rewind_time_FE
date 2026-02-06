@@ -29,16 +29,7 @@ function LogInPage() {
     }
   }, [actionData, fetchCart, login, navigate]);
 
-  return (
-    <>
-      {registrationSuccess && (
-        <p style={{ color: "green", marginBottom: "1rem" }}>
-          Registration successful! Please log in.
-        </p>
-      )}
-      <LogInForm />
-    </>
-  );
+  return <LogInForm registrationSuccess={registrationSuccess} />;
 }
 
 export default LogInPage;
