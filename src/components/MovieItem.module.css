@@ -201,3 +201,32 @@ h4 {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    order: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .event {
+    max-width: 100%;
+    margin: 1rem auto;
+    padding: 0 1rem;
+  }
+
+  .event img {
+    width: 100%;
+    max-width: 22rem;
+    height: auto;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

@@ -22,3 +22,20 @@
 .list a.active {
   background-color: var(--color-primary-600);
 }
+
+@media (max-width: 600px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .list {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .list a {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.95rem;
+  }
+}

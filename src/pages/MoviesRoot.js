@@ -24,7 +24,6 @@ export default function MoviesRootLayout() {
   const [pageInfo, setPageInfo] = useState(loaderData.page); // { size, number, totalElements, totalPages }
   const [q, setQ] = useState(loaderData.q || "");
 
-  // stock cache (same idea as your loader)
   const [stockMap, setStockMap] = useState({});
 
   useEffect(() => {
@@ -79,7 +78,6 @@ export default function MoviesRootLayout() {
       const nextQ = query || "";
       setQ(nextQ);
 
-      // always reset to first page on new search
       await fetchPage({ nextQ, page: 0 });
     },
     [fetchPage],

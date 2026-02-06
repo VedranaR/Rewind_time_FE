@@ -28,3 +28,18 @@ span {
   font-weight: bold;
   text-shadow: 1px 1px 2px #000;
 }
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .container h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  p {
+    font-size: 1rem;
+  }
+}
