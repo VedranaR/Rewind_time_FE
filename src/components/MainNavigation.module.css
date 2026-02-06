@@ -36,20 +36,43 @@ h1 {
     max-width: 100%;
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
-    gap: 0.75rem;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
   }
 
   h1 {
-    margin-right: 0;
     font-size: 1.6rem;
     line-height: 1.1;
+    margin: 0;
+  }
+
+  nav {
+    width: 100%;
   }
 
   .list {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .list a {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 400px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .list a {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.65rem;
   }
 }
