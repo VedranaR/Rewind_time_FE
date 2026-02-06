@@ -92,29 +92,35 @@ export function AuthProvider({ children }) {
     setCart([]);
   }, [setCart]);
 
-  // NEW: fetch cart from server after login (GET /basket with JWT)
-  const fetchCart = useCallback(async () => {
-    if (!jwt) throw new Error("Not authenticated");
+  const fetchCart = useCallback(
+    async (tokenOverride) => {
+      const token = tokenOverride || jwt;
+      if (!token) throw new Error("Not authenticated");
 
-    const res = await fetch(
-      "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${jwt}`,
+      const res = await fetch(
+        "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      },
-    );
+      );
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || `Fetch cart failed (${res.status})`);
-    }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Fetch cart failed (${res.status})`);
+      }
 
-    const data = await res.json();
-    setCart(Array.isArray(data) ? data : []);
-    return data;
-  }, [jwt, setCart]);
+      const data = await res.json();
+
+      // Keep the current assumption (API returns an array of movies)
+      setCart(Array.isArray(data) ? data : []);
+
+      return data;
+    },
+    [jwt, setCart],
+  );
 
   const syncCart = useCallback(async () => {
     if (!jwt) throw new Error("Not authenticated");

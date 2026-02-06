@@ -14,7 +14,9 @@ function LogInPage() {
     new URLSearchParams(location.search).get("registered") === "1";
 
   useEffect(() => {
-    if (actionData?.jwt) {
+    async function handleLogin() {
+      if (!actionData?.jwt) return;
+
       const payload = jwtDecode(actionData.jwt);
       const username = payload.sub;
 
@@ -23,10 +25,17 @@ function LogInPage() {
         isAdmin: actionData.authorities.includes("ROLE_ADMIN"),
         isBanned: false,
       });
-      fetchCart().catch(console.error);
+
+      try {
+        await fetchCart(actionData.jwt); // ✅ token override avoids race
+      } catch (e) {
+        console.error(e);
+      }
 
       navigate("/movies", { replace: true });
     }
+
+    handleLogin();
   }, [actionData, fetchCart, login, navigate]);
 
   return <LogInForm registrationSuccess={registrationSuccess} />;
