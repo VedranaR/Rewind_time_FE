@@ -29,8 +29,6 @@ function MovieItem({ movie }) {
         console.error("Add-to-basket failed:", res.status, text);
         throw new Error(`Add to basket failed (${res.status})`);
       }
-
-      console.log("added to basket on server");
     } catch (err) {
       console.error(err);
       removeFromCart(movie.id);
@@ -45,34 +43,39 @@ function MovieItem({ movie }) {
         `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket/remove/${movie.id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
+          headers: { Authorization: `Bearer ${jwt}` },
         },
       );
 
       if (!res.ok) throw new Error(`Remove failed (${res.status})`);
-      console.log("removed from basket on server");
     } catch (err) {
       console.error(err);
       addToCart(movie);
     }
   }
 
-  // ---- Reviews + Permissions ----
+  // ---------------- Reviews + Permissions ----------------
   const [reviewText, setReviewText] = useState("");
 
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState("");
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
 
-  // Reset form state when switching movies
+  // reset on movie change
   useEffect(() => {
     setReviewText("");
+    setReviews([]);
+    setOrders([]);
+    setReviewsLoaded(false);
+    setOrdersLoaded(false);
+    setReviewsError("");
+    setOrdersError("");
   }, [movie?.id]);
 
   async function fetchOrderHistory() {
@@ -80,11 +83,14 @@ function MovieItem({ movie }) {
 
     setOrdersLoading(true);
     setOrdersError("");
+    setOrdersLoaded(false);
 
     try {
       const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
-        { headers: { Authorization: `Bearer ${jwt}` } },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
       );
 
       if (!res.ok) {
@@ -100,6 +106,7 @@ function MovieItem({ movie }) {
       setOrders([]);
     } finally {
       setOrdersLoading(false);
+      setOrdersLoaded(true);
     }
   }
 
@@ -108,11 +115,14 @@ function MovieItem({ movie }) {
 
     setReviewsLoading(true);
     setReviewsError("");
+    setReviewsLoaded(false);
 
     try {
       const res = await fetch(
         `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/reviews/byMovie/${movie.id}`,
-        { headers: { Authorization: `Bearer ${jwt}` } },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        },
       );
 
       if (!res.ok) {
@@ -129,30 +139,29 @@ function MovieItem({ movie }) {
     } catch (err) {
       console.error("Fetch reviews failed:", err);
       setReviewsError(err.message || "Failed to load reviews");
+      setReviews([]);
     } finally {
       setReviewsLoading(false);
+      setReviewsLoaded(true);
     }
   }
 
+  // fetch on login/token change
   useEffect(() => {
-    if (jwt) fetchOrderHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jwt]);
+    if (!jwt) return;
 
-  useEffect(() => {
-    if (jwt) fetchReviews();
+    fetchOrderHistory();
+    fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt, movie?.id]);
 
   const hasOrderedThisMovie = useMemo(() => {
     if (!Array.isArray(orders) || !movie?.id) return false;
-
     return orders.some(
       (o) => Array.isArray(o.itemIdList) && o.itemIdList.includes(movie.id),
     );
   }, [orders, movie?.id]);
 
-  // NEW: detect “already reviewed” using username from JWT sub
   const myUsername = String(user?.username || "").toLowerCase();
 
   const hasAlreadyReviewedThisMovie = useMemo(() => {
@@ -164,8 +173,22 @@ function MovieItem({ movie }) {
     );
   }, [reviews, myUsername]);
 
+  const canDecideReviewPermission = !!jwt && ordersLoaded && reviewsLoaded;
+
   const canWriteReview =
-    !!jwt && hasOrderedThisMovie && !hasAlreadyReviewedThisMovie;
+    canDecideReviewPermission &&
+    hasOrderedThisMovie &&
+    !hasAlreadyReviewedThisMovie;
+
+  const reviewLockMessage = !jwt
+    ? "Log in to write a review."
+    : !canDecideReviewPermission
+      ? "Loading review permissions..."
+      : !hasOrderedThisMovie
+        ? "You can only review movies you have ordered."
+        : hasAlreadyReviewedThisMovie
+          ? "You have already reviewed this movie."
+          : "";
 
   function handleReviewCancel() {
     if (!reviewText.trim()) return;
@@ -175,6 +198,7 @@ function MovieItem({ movie }) {
   async function handleReviewSubmit(e) {
     e.preventDefault();
 
+    if (!canDecideReviewPermission) return;
     if (!canWriteReview) return;
     if (!reviewText.trim()) return;
 
@@ -199,7 +223,7 @@ function MovieItem({ movie }) {
       alert("Review submitted successfully");
       setReviewText("");
 
-      await fetchReviews(); // refresh sidebar (now it will lock the form automatically)
+      await fetchReviews(); // refresh (and will lock form because now author exists)
     } catch (err) {
       console.error("Review submission failed:", err);
       alert("Failed to submit review: " + err.message);
@@ -210,16 +234,6 @@ function MovieItem({ movie }) {
   const trailerUrl = trailerEmbedUrl
     ? `${trailerEmbedUrl}?autoplay=0&mute=1&controls=1`
     : null;
-
-  const reviewLockMessage = !jwt
-    ? "Log in to write a review."
-    : ordersLoading
-      ? "Checking order history..."
-      : !hasOrderedThisMovie
-        ? "You can only review movies you have ordered."
-        : hasAlreadyReviewedThisMovie
-          ? "You have already reviewed this movie."
-          : "";
 
   return (
     <article className={classes.event}>
@@ -313,7 +327,7 @@ function MovieItem({ movie }) {
                   name="review"
                   rows="5"
                   value={reviewText}
-                  readOnly={!canWriteReview}
+                  readOnly={!canDecideReviewPermission || !canWriteReview}
                   placeholder={reviewLockMessage || "Write your review..."}
                   onChange={(e) => {
                     if (!canWriteReview) return;
@@ -326,13 +340,21 @@ function MovieItem({ movie }) {
                 <button
                   type="button"
                   onClick={handleReviewCancel}
-                  disabled={!canWriteReview || !reviewText.trim()}
+                  disabled={
+                    !canDecideReviewPermission ||
+                    !canWriteReview ||
+                    !reviewText.trim()
+                  }
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={!canWriteReview || !reviewText.trim()}
+                  disabled={
+                    !canDecideReviewPermission ||
+                    !canWriteReview ||
+                    !reviewText.trim()
+                  }
                 >
                   Save
                 </button>
@@ -341,7 +363,9 @@ function MovieItem({ movie }) {
               {!canWriteReview && reviewLockMessage && (
                 <p className={classes.muted}>{reviewLockMessage}</p>
               )}
+
               {ordersError && <p className={classes.error}>{ordersError}</p>}
+              {reviewsError && <p className={classes.error}>{reviewsError}</p>}
             </form>
           )}
 
@@ -351,9 +375,6 @@ function MovieItem({ movie }) {
 
               {reviewsLoading && (
                 <p className={classes.muted}>Loading reviews…</p>
-              )}
-              {!reviewsLoading && reviewsError && (
-                <p className={classes.error}>{reviewsError}</p>
               )}
 
               {!reviewsLoading && !reviewsError && reviews.length === 0 && (
