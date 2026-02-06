@@ -27,7 +27,7 @@ function LogInPage() {
       });
 
       try {
-        await fetchCart(actionData.jwt); // ✅ token override avoids race
+        await fetchCart(actionData.jwt);
       } catch (e) {
         console.error(e);
       }

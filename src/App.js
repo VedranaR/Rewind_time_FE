@@ -55,7 +55,6 @@ const router = createBrowserRouter([
 
           const data = await response.json(); // { content: [...], page: {...} }
 
-          // keep your old stock merge
           const stockRes = await fetch(
             "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/stock",
           );
@@ -77,7 +76,6 @@ const router = createBrowserRouter([
             stock: stockMap[m.id] ?? 0,
           }));
 
-          // IMPORTANT: return object now (not array)
           return {
             movies: moviesWithStock,
             page: data.page,
