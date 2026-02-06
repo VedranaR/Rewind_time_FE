@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 
 function LogInPage() {
   const actionData = useActionData();
-  const { login } = useAuth();
+  const { login, fetchCart } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (actionData?.jwt) {
@@ -19,10 +19,11 @@ function LogInPage() {
         isAdmin: actionData.authorities.includes("ROLE_ADMIN"),
         isBanned: false,
       });
+      fetchCart().catch(console.error);
 
       navigate("/movies", { replace: true });
     }
-  }, [actionData, login, navigate]);
+  }, [actionData, fetchCart, login, navigate]);
 
   return <LogInForm />;
 }

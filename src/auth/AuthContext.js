@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("cart");
   }, [setJwt, setUser, setCart]);
 
+  // Auto-logout on token expiry
   useEffect(() => {
     if (!jwt) return;
 
@@ -46,7 +47,6 @@ export function AuthProvider({ children }) {
     try {
       const { exp } = jwtDecode(jwt); // exp is in seconds since epoch
       if (!exp) {
-        // no exp claim -> treat as invalid for safety
         logout();
         return;
       }
@@ -54,22 +54,18 @@ export function AuthProvider({ children }) {
       const expiresAtMs = exp * 1000;
       const msUntilExpiry = expiresAtMs - Date.now();
 
-      // already expired
       if (msUntilExpiry <= 0) {
         logout();
         return;
       }
 
-      // schedule auto-logout exactly at expiry
       timeoutId = setTimeout(() => {
         logout();
       }, msUntilExpiry);
     } catch (e) {
-      // invalid token -> logout
       logout();
     }
 
-    // cleanup if jwt changes or component unmounts
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
@@ -95,6 +91,30 @@ export function AuthProvider({ children }) {
   const clearCart = useCallback(() => {
     setCart([]);
   }, [setCart]);
+
+  // NEW: fetch cart from server after login (GET /basket with JWT)
+  const fetchCart = useCallback(async () => {
+    if (!jwt) throw new Error("Not authenticated");
+
+    const res = await fetch(
+      "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Fetch cart failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    setCart(Array.isArray(data) ? data : []);
+    return data;
+  }, [jwt, setCart]);
 
   const syncCart = useCallback(async () => {
     if (!jwt) throw new Error("Not authenticated");
@@ -123,6 +143,7 @@ export function AuthProvider({ children }) {
       removeFromCart,
       clearCart,
       syncCart,
+      fetchCart,
     }),
     [
       jwt,
@@ -134,6 +155,7 @@ export function AuthProvider({ children }) {
       removeFromCart,
       clearCart,
       syncCart,
+      fetchCart,
     ],
   );
 
