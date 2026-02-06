@@ -1,4 +1,12 @@
-import { createContext, useContext, useMemo, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useCallback,
+  useEffect,
+} from "react";
+import { jwtDecode } from "jwt-decode";
+
 import useLocalStorage from "../hooks/useLocalStorage";
 
 const AuthContext = createContext(null);
@@ -18,12 +26,54 @@ export function AuthProvider({ children }) {
     },
     [setJwt, setUser],
   );
+
+  const [cart, setCart] = useLocalStorage("cart", []);
+
   const logout = useCallback(() => {
     setJwt(null);
     setUser({ username: "", isAdmin: false, isBanned: false });
-  }, [setJwt, setUser]);
+    setCart([]);
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user");
+    localStorage.removeItem("cart");
+  }, [setJwt, setUser, setCart]);
 
-  const [cart, setCart] = useLocalStorage("cart", []);
+  useEffect(() => {
+    if (!jwt) return;
+
+    let timeoutId;
+
+    try {
+      const { exp } = jwtDecode(jwt); // exp is in seconds since epoch
+      if (!exp) {
+        // no exp claim -> treat as invalid for safety
+        logout();
+        return;
+      }
+
+      const expiresAtMs = exp * 1000;
+      const msUntilExpiry = expiresAtMs - Date.now();
+
+      // already expired
+      if (msUntilExpiry <= 0) {
+        logout();
+        return;
+      }
+
+      // schedule auto-logout exactly at expiry
+      timeoutId = setTimeout(() => {
+        logout();
+      }, msUntilExpiry);
+    } catch (e) {
+      // invalid token -> logout
+      logout();
+    }
+
+    // cleanup if jwt changes or component unmounts
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [jwt, logout]);
 
   const addToCart = useCallback(
     (movie) => {
