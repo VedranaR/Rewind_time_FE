@@ -1,47 +1,72 @@
 import { useEffect, useState } from "react";
-import { Form } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import classes from "./UserProfileEdit.module.css";
 
 function UserProfileEdit() {
   const { jwt } = useAuth();
 
-  // Order history state
   const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-  const [ordersError, setOrdersError] = useState("");
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState("");
 
-  // Return order UX state
   const [returning, setReturning] = useState(false);
+  const [returnMessage, setReturnMessage] = useState("");
   const [returnError, setReturnError] = useState("");
-  const [returnSuccess, setReturnSuccess] = useState("");
 
-  // Fetch order history (reusable so we can refresh after returning)
+  // movieId -> movie object cache
+  const [movieCache, setMovieCache] = useState({});
+
   async function fetchHistory() {
     if (!jwt) return;
 
-    setLoadingOrders(true);
-    setOrdersError("");
+    setLoadingHistory(true);
+    setHistoryError("");
 
     try {
       const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/history",
         {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
+          headers: { Authorization: `Bearer ${jwt}` },
         },
       );
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Failed to load history (${res.status})`);
+      }
 
       const data = await res.json();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
-      setOrdersError(err.message || "Failed to load orders");
+      setHistoryError(err.message || "Failed to load order history");
+      setOrders([]);
     } finally {
-      setLoadingOrders(false);
+      setLoadingHistory(false);
     }
+  }
+
+  async function getMovieById(movieId) {
+    if (movieCache[movieId]) return movieCache[movieId];
+
+    const res = await fetch(
+      `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies/one?id=${encodeURIComponent(
+        movieId,
+      )}`,
+    );
+
+    if (!res.ok) {
+      console.warn("Failed to load movie:", movieId);
+      return null;
+    }
+
+    const movie = await res.json();
+
+    setMovieCache((prev) => ({
+      ...prev,
+      [movieId]: movie,
+    }));
+
+    return movie;
   }
 
   useEffect(() => {
@@ -49,239 +74,124 @@ function UserProfileEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt]);
 
-  // Return latest/active order (user can only have one active order)
-  async function handleReturnLatestOrder() {
-    if (!jwt) return;
+  // Preload movie titles when orders change
+  useEffect(() => {
+    async function preloadMovieTitles() {
+      const allIds = new Set();
 
+      orders.forEach((ord) => {
+        if (Array.isArray(ord.itemIdList)) {
+          ord.itemIdList.forEach((id) => allIds.add(id));
+        }
+      });
+
+      const idsToFetch = Array.from(allIds).filter((id) => !movieCache[id]);
+
+      if (idsToFetch.length === 0) return;
+
+      try {
+        await Promise.all(idsToFetch.map((id) => getMovieById(id)));
+      } catch (e) {
+        console.warn("Failed to preload some movie titles:", e);
+      }
+    }
+
+    preloadMovieTitles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
+
+  async function handleReturnLatest() {
     setReturning(true);
+    setReturnMessage("");
     setReturnError("");
-    setReturnSuccess("");
 
     try {
-      let res = await fetch(
+      const res = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
         {
-          method: "POST", // if backend expects PUT, we fallback below
+          method: "PUT",
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         },
       );
 
-      // fallback if backend uses PUT
-      if (res.status === 405) {
-        res = await fetch(
-          "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/order/returnLatestOrder",
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${jwt}`,
-            },
-          },
-        );
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Return failed (${res.status})`);
       }
 
-      if (!res.ok) throw new Error(await res.text());
-
-      setReturnSuccess("Order successfully returned.");
+      setReturnMessage("Order successfully returned.");
       await fetchHistory();
     } catch (err) {
-      setReturnError(err.message || "Return failed");
+      setReturnError(err.message || "Failed to return order");
     } finally {
       setReturning(false);
     }
   }
 
+  const newestOrder =
+    orders.length > 0
+      ? [...orders].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        )[0]
+      : null;
+
   return (
     <div className={classes.wrapper}>
-      {/* Collapsible section: Personal details */}
-      <details className={classes.section} open>
-        <summary className={classes.summary}>Personal Account Details</summary>
+      <h2 className={classes.title}>Your Past Orders</h2>
 
-        <div className={classes.sectionContent}>
-          <Form method="post" className={classes.form}>
-            <p>
-              <label htmlFor="name">First and Last Name</label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                required
-                placeholder="First and Last Name"
-              />
-            </p>
+      {loadingHistory && <p>Loading order history...</p>}
+      {historyError && <p className={classes.error}>{historyError}</p>}
 
-            <p>
-              <label htmlFor="year">Year and month of birth</label>
-              <input id="year" type="month" name="year" required />
-            </p>
+      {returnMessage && <p className={classes.success}>{returnMessage}</p>}
+      {returnError && <p className={classes.error}>{returnError}</p>}
 
-            <p>
-              <label htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                required
-                placeholder="Email"
-              />
-            </p>
+      {!loadingHistory && orders.length === 0 && (
+        <p>You have no past orders.</p>
+      )}
 
-            <p>
-              <label htmlFor="password">Your Chosen Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                required
-                placeholder="Password"
-              />
-            </p>
+      <ul className={classes.orderList}>
+        {orders.map((ord) => {
+          const isNewest =
+            newestOrder && newestOrder.trackingNumber === ord.trackingNumber;
 
-            <div className={classes.actions}>
-              {/* type="reset" clears fields */}
-              <button type="reset">Cancel</button>
-              <button type="submit">Save</button>
-            </div>
-          </Form>
-        </div>
-      </details>
-
-      <hr className={classes.divider} />
-
-      {/* Collapsible section: Membership / payment */}
-      <details className={classes.section}>
-        <summary className={classes.summary}>
-          Membership Fee Payment Details
-        </summary>
-
-        <div className={classes.sectionContent}>
-          <Form method="post" className={classes.form}>
-            <p>
-              <label htmlFor="cardNumber">Credit Card Number</label>
-              <input
-                id="cardNumber"
-                type="text"
-                name="cardNumber"
-                required
-                placeholder="Credit Card Number"
-              />
-            </p>
-
-            <p>
-              <label htmlFor="cardExpirationDate">Card Valid Until</label>
-              <input
-                id="cardExpirationDate"
-                type="month"
-                name="cardExpirationDate"
-                required
-              />
-            </p>
-
-            <p>
-              <label htmlFor="cardHolderName">Credit Card Owner</label>
-              <input
-                id="cardHolderName"
-                type="text"
-                name="cardHolderName"
-                required
-                placeholder="Credit Card Owner"
-              />
-            </p>
-
-            <p>
-              <label htmlFor="streetWithNumber">
-                Street Name and House Number
-              </label>
-              <input
-                id="streetWithNumber"
-                type="text"
-                name="streetWithNumber"
-                required
-                placeholder="Street Name and House Number"
-              />
-            </p>
-
-            <p>
-              <label htmlFor="city">City</label>
-              <input
-                id="city"
-                type="text"
-                name="city"
-                required
-                placeholder="City"
-              />
-            </p>
-
-            <p>
-              <label htmlFor="postalCode">Postal Code</label>
-              <input
-                id="postalCode"
-                type="text"
-                name="postalCode"
-                required
-                placeholder="Postal Code"
-              />
-            </p>
-
-            <div className={classes.actions}>
-              <button type="reset">Cancel</button>
-              <button type="submit">Save</button>
-            </div>
-          </Form>
-        </div>
-      </details>
-
-      <hr className={classes.divider} />
-
-      {/* Order history section */}
-      <section className={classes.historySection}>
-        <h2 className={classes.title}>Your Past Orders</h2>
-
-        {returnSuccess && <p className={classes.success}>{returnSuccess}</p>}
-        {returnError && <p className={classes.error}>{returnError}</p>}
-
-        {loadingOrders && <p>Loading…</p>}
-        {!loadingOrders && ordersError && (
-          <p className={classes.error}>{ordersError}</p>
-        )}
-
-        {!loadingOrders && !ordersError && orders.length === 0 && (
-          <p>You have no past orders.</p>
-        )}
-
-        {!loadingOrders && !ordersError && orders.length > 0 && (
-          <ul className={classes.orderList}>
-            {orders.map((ord) => (
-              <li key={ord.trackingNumber} className={classes.orderItem}>
+          return (
+            <li key={ord.trackingNumber} className={classes.orderItem}>
+              <p>
                 <strong>Tracking #:</strong> {ord.trackingNumber}
-                <br />
+              </p>
+              <p>
                 <strong>Date:</strong>{" "}
-                {ord.orderDate ? new Date(ord.orderDate).toLocaleString() : ""}
-                <br />
+                {ord.createdAt ? new Date(ord.createdAt).toLocaleString() : ""}
+              </p>
+              <p>
                 <strong>Items:</strong>{" "}
-                {Array.isArray(ord.itemIdList) ? ord.itemIdList.join(", ") : ""}
-                <br />
-                <strong>Status:</strong>{" "}
-                {ord.isReturned ? "Returned" : "Active"}
-                {/* Only active order can be returned; user has max 1 active */}
-                {!ord.isReturned && (
-                  <div className={classes.orderActions}>
-                    <button
-                      type="button"
-                      onClick={handleReturnLatestOrder}
-                      disabled={returning}
-                      className={classes.returnBtn}
-                    >
-                      {returning ? "Returning…" : "Return order"}
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                {Array.isArray(ord.itemIdList) && ord.itemIdList.length > 0
+                  ? ord.itemIdList
+                      .map((id) => movieCache[id]?.title || id)
+                      .join(", ")
+                  : ""}
+              </p>
+              <p>
+                <strong>Status:</strong> {ord.status}
+              </p>
+
+              {isNewest && ord.status !== "Returned" && (
+                <div className={classes.orderActions}>
+                  <button
+                    onClick={handleReturnLatest}
+                    disabled={returning}
+                    className={classes.returnBtn}
+                  >
+                    {returning ? "Returning..." : "Return order"}
+                  </button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
