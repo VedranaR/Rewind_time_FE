@@ -60,3 +60,53 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .userTable {
+    display: block;
+    width: 100%;
+    margin: 1rem auto;
+  }
+
+  .userTable thead {
+    display: none;
+  }
+
+  .userTable tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .userTable tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-gray-700);
+    background: var(--color-gray-850);
+  }
+
+  .userTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+  }
+
+  .userTable td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: var(--color-primary);
+  }
+
+  .userTable td.center {
+    justify-content: space-between;
+  }
+
+  .userTable button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
