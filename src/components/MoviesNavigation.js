@@ -38,7 +38,7 @@ function MoviesNavigation({ onSearch }) {
                 </NavLink>
               </li>
             )}
-            {jwt && user.isAdmin && (
+            {/*jwt && user.isAdmin && (
               <>
                 <li>
                   <NavLink
@@ -52,7 +52,7 @@ function MoviesNavigation({ onSearch }) {
                   </NavLink>
                 </li>
               </>
-            )}
+            )*/}
           </ul>
         </nav>
       </header>

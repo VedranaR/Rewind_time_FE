@@ -54,7 +54,7 @@ function MovieItem({ movie }) {
     }
   }
 
-  // ---------------- Reviews + Permissions ----------------
+  //reviews
   const [reviewText, setReviewText] = useState("");
 
   const [reviews, setReviews] = useState([]);
@@ -250,7 +250,7 @@ function MovieItem({ movie }) {
       <menu className={classes.actions}>
         {user.isAdmin && <Link to="edit">Edit</Link>}
 
-        {user.isAdmin && <button onClick={() => null}>Delete</button>}
+        {/*user.isAdmin && <button onClick={() => null}>Delete</button>*/}
 
         {jwt && !inCart && (
           <button className={classes.rentBtn} onClick={addToCartHandler}>
