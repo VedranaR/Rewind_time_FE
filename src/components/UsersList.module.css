@@ -126,8 +126,12 @@
     justify-content: space-between;
   }
 
-  .userTable button {
-    width: 100%;
-    margin-top: 0.5rem;
+  .userTable td[data-label="Actions"] {
+    justify-content: flex-end;
+  }
+
+  .userTable td[data-label="Actions"] button {
+    width: 45%;
+    min-width: 110px;
   }
 }
