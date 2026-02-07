@@ -146,7 +146,6 @@ function MovieItem({ movie }) {
     }
   }
 
-  // fetch on login/token change
   useEffect(() => {
     if (!jwt) return;
 
@@ -223,7 +222,7 @@ function MovieItem({ movie }) {
       alert("Review submitted successfully");
       setReviewText("");
 
-      await fetchReviews(); // refresh (and will lock form because now author exists)
+      await fetchReviews();
     } catch (err) {
       console.error("Review submission failed:", err);
       alert("Failed to submit review: " + err.message);

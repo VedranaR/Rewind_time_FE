@@ -5,17 +5,14 @@ import classes from "./UserProfileEdit.module.css";
 function UserProfileEdit() {
   const { jwt, user } = useAuth();
 
-  // order history
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState("");
 
-  // return order
   const [returning, setReturning] = useState(false);
   const [returnError, setReturnError] = useState("");
   const [returnSuccess, setReturnSuccess] = useState("");
 
-  // membership
   const [membership, setMembership] = useState(null);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipError, setMembershipError] = useState("");
@@ -24,7 +21,6 @@ function UserProfileEdit() {
   const [membershipSaveError, setMembershipSaveError] = useState("");
   const [membershipSaveSuccess, setMembershipSaveSuccess] = useState("");
 
-  // membership form fields (flat payload for PUT /membership)
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpirationDate, setCardExpirationDate] = useState("");
   const [cardHolderName, setCardHolderName] = useState("");
@@ -32,7 +28,6 @@ function UserProfileEdit() {
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
 
-  // movie cache for titles in order history
   const [movieCache, setMovieCache] = useState({});
 
   async function fetchHistory() {
@@ -76,7 +71,6 @@ function UserProfileEdit() {
         },
       );
 
-      // If backend says "User is not member!" (even though it's 500), treat as NO MEMBERSHIP
       if (!res.ok) {
         const text = await res.text();
 
@@ -85,7 +79,7 @@ function UserProfileEdit() {
 
         if (isNotMember) {
           setMembership(null);
-          setMembershipError(""); // IMPORTANT: don't show red error
+          setMembershipError("");
           return;
         }
 
@@ -103,7 +97,6 @@ function UserProfileEdit() {
       setCity(data?.shippingInfo?.city || "");
       setPostalCode(data?.shippingInfo?.postalCode || "");
     } catch (err) {
-      // For other real errors (network, etc.) show a friendly message
       setMembership(null);
       setMembershipError("Could not load membership details.");
     } finally {
@@ -249,7 +242,6 @@ function UserProfileEdit() {
 
   return (
     <div className={classes.wrapper}>
-      {/* Account details read-only */}
       <details className={classes.section} open>
         <summary className={classes.summary}>Account details</summary>
 
@@ -321,7 +313,6 @@ function UserProfileEdit() {
 
       <hr className={classes.divider} />
 
-      {/* Membership edit form */}
       <details className={classes.section}>
         <summary className={classes.summary}>
           Membership Fee Payment Details (Edit)
@@ -433,7 +424,6 @@ function UserProfileEdit() {
 
       <hr className={classes.divider} />
 
-      {/* Order history section */}
       <section className={classes.historySection}>
         <h2 className={classes.title}>Your Past Orders</h2>
 

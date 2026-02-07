@@ -30,7 +30,7 @@ export async function action({ request }) {
     return redirect("/login?registered=1");
   }
 
-  // handle code 409 "User already exists!"
+  // handle response "User already exists!"
   let message = "Registration failed. Please try again.";
   try {
     const err = await response.json();

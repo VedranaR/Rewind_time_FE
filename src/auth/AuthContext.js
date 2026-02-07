@@ -97,7 +97,7 @@ export function AuthProvider({ children }) {
       const token = tokenOverride || jwt;
       if (!token) throw new Error("Not authenticated");
 
-      // 1) fetch basket
+      //fetch basket
       const basketRes = await fetch(
         "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/basket",
         {
@@ -122,7 +122,7 @@ export function AuthProvider({ children }) {
         return [];
       }
 
-      // 2) fetch movie details in parallel
+      //fetch movie details in parallel
       const moviePromises = ids.map(async (id) => {
         const res = await fetch(
           `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies/one?id=${encodeURIComponent(
@@ -131,7 +131,7 @@ export function AuthProvider({ children }) {
         );
 
         if (!res.ok) {
-          // skip missing movies instead of breaking everything
+          //skip missing movies
           console.warn("Failed to fetch movie for basket id:", id, res.status);
           return null;
         }
@@ -141,7 +141,7 @@ export function AuthProvider({ children }) {
 
       const movies = (await Promise.all(moviePromises)).filter(Boolean);
 
-      // 3) update cart
+      //update cart
       setCart(movies);
       return movies;
     },

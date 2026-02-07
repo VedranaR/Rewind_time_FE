@@ -47,7 +47,6 @@ h4 {
   color: var(--color-primary-800);
 }
 
-/* NEW: layout for content + sidebar */
 .layout {
   display: grid;
   grid-template-columns: 1fr 18rem;
@@ -57,12 +56,10 @@ h4 {
   text-align: left;
 }
 
-/* Keep your existing content block */
 .content {
   text-align: left;
 }
 
-/* Sidebar block */
 .sidebar {
   border: 1px solid var(--color-gray-300);
   background: var(--color-gray-50);
@@ -70,7 +67,6 @@ h4 {
   padding: 0.75rem;
 }
 
-/* Review form (slightly adjusted so it fits sidebar) */
 .form {
   max-width: 100%;
   margin: 0;
@@ -89,7 +85,6 @@ h4 {
   padding: 0.25rem;
 }
 
-/* Separate form buttons from top action menu styling */
 .formActions {
   display: flex;
   gap: 1rem;
@@ -120,7 +115,6 @@ h4 {
   background-color: var(--color-gray-800);
 }
 
-/* Trailer */
 .trailer {
   margin-top: 0.75rem;
 }
@@ -141,7 +135,6 @@ h4 {
   border: 0;
 }
 
-/* Reviews list styling */
 .reviewHistory {
   margin-top: 1rem;
   padding-top: 0.75rem;
@@ -195,7 +188,6 @@ h4 {
   color: red;
 }
 
-/* Responsive: stack sidebar below on small screens */
 @media (max-width: 800px) {
   .layout {
     grid-template-columns: 1fr;

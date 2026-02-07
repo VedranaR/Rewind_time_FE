@@ -1,11 +1,8 @@
-/* ShoppingCart.module.css */
-
 .movies {
   margin: 2rem auto;
   max-width: 50rem;
 }
 
-/* container for the single proceed‐all button */
 .globalActions {
   display: flex;
   justify-content: flex-end;
@@ -42,7 +39,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* THE ONE LINK that wraps img + content */
 .item > a {
   display: flex;
   align-items: center;
@@ -58,7 +54,6 @@
   background: var(--color-gray-700);
 }
 
-/* poster on the left */
 .item img {
   flex-shrink: 0;
   width: 60px;
@@ -67,7 +62,6 @@
   object-fit: cover;
 }
 
-/* right-hand column */
 .content {
   flex: 1;
   display: flex;
@@ -75,21 +69,18 @@
   gap: 0.25rem;
 }
 
-/* title */
 .content h2 {
   margin: 0;
   font-size: 1rem;
   line-height: 1.2;
 }
 
-/* section labels */
 .content h4 {
   margin: 0;
   font-size: 0.75rem;
   color: var(--color-yellow, yellow);
 }
 
-/* actor/director lists side by side */
 .actorslist,
 .directorslist {
   display: flex;
@@ -104,7 +95,6 @@
   font-size: 0.85rem;
 }
 
-/* buttons stuck to the bottom of the card */
 .buttons {
   margin-top: auto;
   display: flex;
