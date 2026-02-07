@@ -248,7 +248,7 @@ function MovieItem({ movie }) {
       />
 
       <menu className={classes.actions}>
-        {user.isAdmin && <Link to="edit">Edit</Link>}
+        {/*user.isAdmin && <Link to="edit">Edit</Link>*/}
 
         {/*user.isAdmin && <button onClick={() => null}>Delete</button>*/}
 
