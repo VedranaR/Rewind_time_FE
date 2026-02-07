@@ -76,7 +76,21 @@ function UserProfileEdit() {
         },
       );
 
-      if (!res.ok) throw new Error(await res.text());
+      // If backend says "User is not member!" (even though it's 500), treat as NO MEMBERSHIP
+      if (!res.ok) {
+        const text = await res.text();
+
+        const isNotMember =
+          res.status === 500 && /not\s*member/i.test(text || "");
+
+        if (isNotMember) {
+          setMembership(null);
+          setMembershipError(""); // IMPORTANT: don't show red error
+          return;
+        }
+
+        throw new Error(text || `Failed to load membership (${res.status})`);
+      }
 
       const data = await res.json();
       setMembership(data);
@@ -89,8 +103,9 @@ function UserProfileEdit() {
       setCity(data?.shippingInfo?.city || "");
       setPostalCode(data?.shippingInfo?.postalCode || "");
     } catch (err) {
+      // For other real errors (network, etc.) show a friendly message
       setMembership(null);
-      setMembershipError(err.message || "Failed to load membership details");
+      setMembershipError("Could not load membership details.");
     } finally {
       setMembershipLoading(false);
     }
@@ -252,6 +267,12 @@ function UserProfileEdit() {
           {membershipLoading && <p>Loading membership details…</p>}
           {!membershipLoading && membershipError && (
             <p className={classes.error}>{membershipError}</p>
+          )}
+
+          {!membershipLoading && !membershipError && !membership && (
+            <p className={classes.muted}>
+              You are not a member yet. Please fill in membership details below.
+            </p>
           )}
 
           {!membershipLoading && !membershipError && membership && (
