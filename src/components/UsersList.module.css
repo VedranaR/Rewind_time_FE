@@ -61,11 +61,32 @@
   cursor: not-allowed;
 }
 
+.userTable button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-primary-500);
+  background: var(--color-primary-100);
+  color: var(--color-gray-900);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.userTable button:hover {
+  background: var(--color-primary-200);
+  transform: translateY(-1px);
+}
+
+.userTable button:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .userTable {
     display: block;
     width: 100%;
     margin: 1rem auto;
+    padding: 0 1rem;
   }
 
   .userTable thead {
@@ -79,8 +100,8 @@
 
   .userTable tr {
     display: block;
-    margin-bottom: 1rem;
-    padding: 1rem;
+    margin: 1.5rem 0;
+    padding: 1.25rem;
     border-radius: 8px;
     border: 1px solid var(--color-gray-700);
     background: var(--color-gray-850);
