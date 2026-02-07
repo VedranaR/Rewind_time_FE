@@ -38,7 +38,7 @@ function LogInForm({ method, registrationSuccess }) {
         <button type="button" onClick={cancelHandler}>
           Cancel
         </button>
-        <button>Save</button>
+        <button>Log in</button>
       </div>
     </Form>
   );
