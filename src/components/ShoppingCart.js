@@ -66,7 +66,6 @@ export default function ShoppingCart() {
         return;
       }
 
-      console.log("Order completed!");
       clearCart();
       alert("Your order was placed successfully!");
     } catch (err) {
@@ -87,7 +86,7 @@ export default function ShoppingCart() {
         },
       );
       if (!res.ok) throw new Error(`Remove failed (${res.status})`);
-      console.log("✅ removed from basket on server");
+      console.log("removed from basket on server");
     } catch (err) {
       console.error(err);
 

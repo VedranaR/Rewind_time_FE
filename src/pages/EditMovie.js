@@ -11,7 +11,7 @@ export default EditMoviePage;
 
 export async function editLoader({ request, params }) {
   const id = params.movieId;
-  console.log(params);
+
   const response = await fetch(
     `https://tim11-ntpws-0aafd8e5d462.herokuapp.com/movies/one?id=${id}`,
   );

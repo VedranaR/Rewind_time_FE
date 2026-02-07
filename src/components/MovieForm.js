@@ -7,7 +7,7 @@ function MovieForm({ method, movie }) {
   function cancelHandler() {
     navigate("..");
   }
-  console.log(movie);
+
   return (
     <Form method="post" className={classes.form}>
       <p>

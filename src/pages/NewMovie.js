@@ -13,7 +13,7 @@ export default NewMoviePage;
 
 export async function action({ request, params }) {
   const data = await request.formData();
-  //console.log(Object.fromEntries(data));
+
   const title = Object.fromEntries(data).title;
   const coverImageUrl = Object.fromEntries(data).coverImageUrl;
   const releaseDate = Object.fromEntries(data).releaseDate;
@@ -32,11 +32,9 @@ export async function action({ request, params }) {
       name,
     }));
   const description = Object.fromEntries(data).description;
-  console.log(actors);
 
   let token = localStorage.getItem("jwt");
   token = token.slice(1, -1);
-  console.log(token);
   try {
     const response = await fetch(
       "https://tim11-ntpws-0aafd8e5d462.herokuapp.com/admin/movie",
@@ -54,7 +52,7 @@ export async function action({ request, params }) {
     );
 
     const status = response.status;
-    console.log(status);
+
     //return redirect("/movies");
   } catch {
     //return redirect("/movies");
